@@ -1,7 +1,7 @@
 use yew::prelude::*;
 
 mod components;
-use components::FileLoader;
+use components::{FileLoader, ID3Tag};
 
 mod state;
 use state::{AppAction, AppState};
@@ -18,6 +18,7 @@ fn App() -> Html {
         frames: Vec::new(),
         reader_tasks: None,
         name: String::new(),
+        bytes: Vec::new(),
     });
 
     let _tasks = use_state(Vec::<FileReader>::new);
@@ -64,15 +65,20 @@ fn App() -> Html {
         })
     };
 
-    let s = state.clone();
+    let _s = state.clone();
     let save_clicked = Callback::from(move |_: MouseEvent| {
         log!("save clicked");
-        log!(format!("{:?}", s.name));
+        // let wr = s.bytes.clone();
+        // let r = s.tag.as_ref().unwrap().write_to(wr, id3::Version::Id3v23);
+        // let blob = web_sys::Blob::new_with_u8_array_sequence(wr).unwrap();
+        // web_sys::Url::create_object_url
+        // log!(format!("{:?}", s.name));
     });
 
     html! {
         <div>
-            <FileLoader tag={state.tag.clone()} on_file_change={on_file_change} on_title_change={on_title_change} save_clicked={save_clicked} name={state.name.clone()}/>
+            <FileLoader on_file_change={on_file_change} />
+            <ID3Tag tag={state.tag.clone()} on_title_change={on_title_change} name={state.name.clone()} save_clicked={save_clicked}/>
         </div>
     }
 }

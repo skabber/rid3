@@ -1,8 +1,6 @@
-use crate::state::{AppAction, AppState};
 use gloo::console::log;
-use gloo_file::{callbacks::FileReader, File};
 use id3::{frame::Chapter, Tag};
-use web_sys::{Event, HtmlInputElement};
+use web_sys::Event;
 use yew::prelude::*;
 
 use base64::engine::general_purpose::STANDARD as BASE64;
@@ -10,47 +8,28 @@ use base64::engine::Engine as _;
 
 #[derive(Properties, PartialEq)]
 pub struct FileLoaderProps {
-    pub tag: Option<Tag>,
     pub on_file_change: Callback<Event>,
-    pub on_title_change: Callback<Event>,
-    pub name: String,
-    pub save_clicked: Callback<MouseEvent>,
 }
 
 #[function_component(FileLoader)]
-pub fn file_loader(
-    FileLoaderProps {
-        tag,
-        on_file_change,
-        on_title_change,
-        name,
-        save_clicked,
-    }: &FileLoaderProps,
-) -> Html {
-    let mut t = None;
-
-    if let Some(tag) = tag {
-        t = Some(tag.clone());
-    }
-
+pub fn file_loader(FileLoaderProps { on_file_change }: &FileLoaderProps) -> Html {
     html!(
         <div>
             <input type="file" accept="audio/mp3,audio/*" onchange={on_file_change} multiple=false/>
-            <ID3Tag tag={t} on_title_change={on_title_change} name={name.clone()} save_clicked={save_clicked}/>
         </div>
     )
 }
 
 #[derive(Properties, PartialEq)]
-struct ID3TagProps {
-    tag: Option<Tag>,
-    on_title_change: Callback<Event>,
-    name: String,
-    save_clicked: Callback<MouseEvent>,
+pub struct ID3TagProps {
+    pub tag: Option<Tag>,
+    pub on_title_change: Callback<Event>,
+    pub name: String,
+    pub save_clicked: Callback<MouseEvent>,
 }
 
 #[function_component(ID3Tag)]
-fn tag(
+pub fn tag(
     ID3TagProps {
         tag,
         on_title_change,

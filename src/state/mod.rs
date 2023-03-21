@@ -11,11 +11,11 @@ pub struct AppState {
     pub frames: Vec<Frame>,
     pub reader_tasks: Option<Rc<FileReader>>,
     pub name: String,
+    pub bytes: Vec<u8>,
 }
 
 pub enum AppAction {
     MP3Ready(Vec<u8>),
-    // AddTag(Tag),
     AddReader(FileReader),
     TitleChanged(String),
 }
@@ -33,6 +33,7 @@ impl Reducible for AppState {
                     frames: self.frames.clone(),
                     reader_tasks: Some(Rc::new(reader)),
                     name: self.name.clone(),
+                    bytes: self.bytes.clone(),
                 })
             }
             AppAction::MP3Ready(contents) => {
@@ -57,6 +58,7 @@ impl Reducible for AppState {
                     frames: self.frames.clone(),
                     reader_tasks: self.reader_tasks.clone(),
                     name: self.name.clone(),
+                    bytes: self.bytes.clone(),
                 })
             }
             AppAction::TitleChanged(title) => {
@@ -67,6 +69,7 @@ impl Reducible for AppState {
                     frames: self.frames.clone(),
                     reader_tasks: self.reader_tasks.clone(),
                     name: title,
+                    bytes: self.bytes.clone(),
                 })
             } // AppAction::AddTag(tag) => {
               //     log!("add tag");
