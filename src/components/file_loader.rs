@@ -8,61 +8,33 @@ use yew::prelude::*;
 use base64::engine::general_purpose::STANDARD as BASE64;
 use base64::engine::Engine as _;
 
+#[derive(Properties, PartialEq)]
+pub struct FileLoaderProps {
+    pub tag: Option<Tag>,
+    pub on_file_change: Callback<Event>,
+    pub on_title_change: Callback<Event>,
+    pub name: String,
+}
+
 #[function_component(FileLoader)]
-pub fn file_loader() -> Html {
-    let state = use_reducer(|| AppState {
-        mp3: None,
-        tag: None,
-        frames: Vec::new(),
-        reader_tasks: None,
-        name: String::new(),
-    });
-    let state_view = state.clone();
-
-    let _tasks = use_state(Vec::<FileReader>::new);
-
-    let on_change = {
-        Callback::from(move |e: Event| {
-            let state = state.clone();
-            let mut selected_files = Vec::new();
-            let input: HtmlInputElement = e.target_unchecked_into();
-            if let Some(files) = input.files() {
-                let files = js_sys::try_iter(&files)
-                    .unwrap()
-                    .unwrap()
-                    .map(|v| web_sys::File::from(v.unwrap()))
-                    .map(File::from);
-                selected_files.extend(files);
-            }
-
-            for sf in selected_files {
-                let state = state.clone();
-                {
-                    let state = state.clone();
-                    let sd = state.clone();
-                    let task = gloo_file::callbacks::read_as_bytes(&sf, move |bytes| {
-                        let contents = bytes.unwrap();
-
-                        state.dispatch(AppAction::MP3Ready(contents));
-                    });
-
-                    sd.dispatch(AppAction::AddReader(task));
-                }
-                // tasks.set(vec![task]); // leaks memory
-            }
-        })
-    };
-
+pub fn file_loader(
+    FileLoaderProps {
+        tag,
+        on_file_change,
+        on_title_change,
+        name,
+    }: &FileLoaderProps,
+) -> Html {
     let mut t = None;
 
-    if let Some(tag) = &state_view.tag {
+    if let Some(tag) = tag {
         t = Some(tag.clone());
     }
 
     html!(
         <div>
-            <input type="file" accept="audio/mp3,audio/*" onchange={on_change} multiple=false/>
-            <ID3Tag tag={t} />
+            <input type="file" accept="audio/mp3,audio/*" onchange={on_file_change} multiple=false/>
+            <ID3Tag tag={t} on_title_change={on_title_change} name={name.clone()}/>
         </div>
     )
 }
@@ -70,11 +42,19 @@ pub fn file_loader() -> Html {
 #[derive(Properties, PartialEq)]
 struct ID3TagProps {
     tag: Option<Tag>,
+    on_title_change: Callback<Event>,
+    name: String,
 }
 
 #[function_component(ID3Tag)]
-fn tag(ID3TagProps { tag }: &ID3TagProps) -> Html {
-    let mut name = "";
+fn tag(
+    ID3TagProps {
+        tag,
+        on_title_change,
+        name,
+    }: &ID3TagProps,
+) -> Html {
+    // let mut name = "";
     let mut tpe1 = "";
     let mut tit2 = "";
     let mut uslt = "";
@@ -84,7 +64,7 @@ fn tag(ID3TagProps { tag }: &ID3TagProps) -> Html {
     if let Some(tag) = tag {
         for f in tag.frames() {
             if f.id() == "TALB" {
-                name = f.content().text().unwrap();
+                // name = f.content().text().unwrap();
             } else if f.id() == "TPE1" {
                 tpe1 = f.content().text().unwrap();
             } else if f.id() == "TIT2" {
@@ -109,7 +89,7 @@ fn tag(ID3TagProps { tag }: &ID3TagProps) -> Html {
         chaps = tag.chapters().cloned().collect();
     }
 
-    let title = String::from(name);
+    // let title = String::from(name);
 
     let save_clicked = Callback::from(move |_: MouseEvent| {
         log!("save clicked");
@@ -118,7 +98,7 @@ fn tag(ID3TagProps { tag }: &ID3TagProps) -> Html {
     html! {
         <div>
             <img src={format!("data:image/png;base64,{}", pic)} width="500" />
-            <h1>{"Title:"} <input type="text" name="tile" value={ title }/></h1>
+            <h1>{"Title:"} <input type="text" name="tile" value={ name.clone() } onchange={on_title_change}/></h1>
             <h2>{ tpe1 }</h2>
             <h2>{ tit2 }</h2>
             <h2>{ comm }</h2>

@@ -17,6 +17,7 @@ pub enum AppAction {
     MP3Ready(Vec<u8>),
     // AddTag(Tag),
     AddReader(FileReader),
+    TitleChanged(String),
 }
 
 impl Reducible for AppState {
@@ -56,6 +57,16 @@ impl Reducible for AppState {
                     frames: self.frames.clone(),
                     reader_tasks: self.reader_tasks.clone(),
                     name: self.name.clone(),
+                })
+            }
+            AppAction::TitleChanged(title) => {
+                log!("title changed");
+                std::rc::Rc::new(AppState {
+                    mp3: self.mp3.clone(),
+                    tag: self.tag.clone(),
+                    frames: self.frames.clone(),
+                    reader_tasks: self.reader_tasks.clone(),
+                    name: title,
                 })
             } // AppAction::AddTag(tag) => {
               //     log!("add tag");
