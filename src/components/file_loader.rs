@@ -5,6 +5,9 @@ use id3::{frame::Chapter, Tag};
 use web_sys::{Event, HtmlInputElement};
 use yew::prelude::*;
 
+use base64::engine::general_purpose::STANDARD as BASE64;
+use base64::engine::Engine as _;
+
 #[function_component(FileLoader)]
 pub fn file_loader() -> Html {
     let state = use_reducer(|| AppState {
@@ -16,7 +19,7 @@ pub fn file_loader() -> Html {
     });
     let state_view = state.clone();
 
-    let tasks = use_state(Vec::<FileReader>::new);
+    let _tasks = use_state(Vec::<FileReader>::new);
 
     let on_change = {
         Callback::from(move |e: Event| {
@@ -97,7 +100,7 @@ fn tag(ID3TagProps { tag }: &ID3TagProps) -> Html {
             } else if f.id() == "APIC" {
                 if let Some(p) = f.content().picture() {
                     log!(format!("{:?}", p.mime_type));
-                    pic = base64::encode(&p.data);
+                    pic = BASE64.encode(&p.data);
                 }
             } else if f.id() != "CHAP" {
                 log!(format!("{:?}", f));

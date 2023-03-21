@@ -1,5 +1,3 @@
-use gloo::console::log;
-use id3::{self, Tag};
 use yew::prelude::*;
 
 mod components;
@@ -17,6 +15,5 @@ fn App() -> Html {
 }
 
 fn main() {
-    log!("main");
     yew::Renderer::<App>::new().render();
 }

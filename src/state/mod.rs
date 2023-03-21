@@ -26,13 +26,11 @@ impl Reducible for AppState {
         match action {
             AppAction::AddReader(reader) => {
                 log!("add reader");
-                let mut tasks = self.reader_tasks.clone();
-                tasks = Some(Rc::new(reader));
                 std::rc::Rc::new(AppState {
                     mp3: self.mp3.clone(),
                     tag: self.tag.clone(),
                     frames: self.frames.clone(),
-                    reader_tasks: tasks,
+                    reader_tasks: Some(Rc::new(reader)),
                     name: self.name.clone(),
                 })
             }
