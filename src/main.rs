@@ -6,6 +6,7 @@ use components::FileLoader;
 mod state;
 use state::{AppAction, AppState};
 
+use gloo::console::log;
 use gloo_file::{callbacks::FileReader, File};
 use web_sys::{Event, HtmlInputElement};
 
@@ -18,7 +19,6 @@ fn App() -> Html {
         reader_tasks: None,
         name: String::new(),
     });
-    // let state_view = state.clone();
 
     let _tasks = use_state(Vec::<FileReader>::new);
 
@@ -64,9 +64,15 @@ fn App() -> Html {
         })
     };
 
+    let s = state.clone();
+    let save_clicked = Callback::from(move |_: MouseEvent| {
+        log!("save clicked");
+        log!(format!("{:?}", s.name));
+    });
+
     html! {
         <div>
-            <FileLoader tag={state.tag.clone()} on_file_change={on_file_change} on_title_change={on_title_change} name={state.name.clone()}/>
+            <FileLoader tag={state.tag.clone()} on_file_change={on_file_change} on_title_change={on_title_change} save_clicked={save_clicked} name={state.name.clone()}/>
         </div>
     }
 }

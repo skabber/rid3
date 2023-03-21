@@ -14,6 +14,7 @@ pub struct FileLoaderProps {
     pub on_file_change: Callback<Event>,
     pub on_title_change: Callback<Event>,
     pub name: String,
+    pub save_clicked: Callback<MouseEvent>,
 }
 
 #[function_component(FileLoader)]
@@ -23,6 +24,7 @@ pub fn file_loader(
         on_file_change,
         on_title_change,
         name,
+        save_clicked,
     }: &FileLoaderProps,
 ) -> Html {
     let mut t = None;
@@ -34,7 +36,7 @@ pub fn file_loader(
     html!(
         <div>
             <input type="file" accept="audio/mp3,audio/*" onchange={on_file_change} multiple=false/>
-            <ID3Tag tag={t} on_title_change={on_title_change} name={name.clone()}/>
+            <ID3Tag tag={t} on_title_change={on_title_change} name={name.clone()} save_clicked={save_clicked}/>
         </div>
     )
 }
@@ -44,6 +46,7 @@ struct ID3TagProps {
     tag: Option<Tag>,
     on_title_change: Callback<Event>,
     name: String,
+    save_clicked: Callback<MouseEvent>,
 }
 
 #[function_component(ID3Tag)]
@@ -52,6 +55,7 @@ fn tag(
         tag,
         on_title_change,
         name,
+        save_clicked,
     }: &ID3TagProps,
 ) -> Html {
     // let mut name = "";
@@ -88,12 +92,6 @@ fn tag(
         }
         chaps = tag.chapters().cloned().collect();
     }
-
-    // let title = String::from(name);
-
-    let save_clicked = Callback::from(move |_: MouseEvent| {
-        log!("save clicked");
-    });
 
     html! {
         <div>
