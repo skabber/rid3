@@ -14,9 +14,22 @@ pub struct FileLoaderProps {
 #[function_component(FileLoader)]
 pub fn file_loader(FileLoaderProps { on_file_change }: &FileLoaderProps) -> Html {
     html!(
-        <div>
-            <input type="file" accept="audio/mp3,audio/*" onchange={on_file_change} multiple=false/>
-        </div>
+        <div class="file">
+            <label class="file-label">
+              <input class="file-input" type="file" name="resume" accept="audio/mp3,audio/*" onchange={on_file_change} multiple=false/>
+              <span class="file-cta">
+                <span class="file-icon">
+                  <i class="fas fa-upload"></i>
+                </span>
+                <span class="file-label">
+                  {"Choose a file…"}
+                </span>
+              </span>
+            </label>
+          </div>
+        //<div>
+        //    <input type="file" accept="audio/mp3,audio/*" onchange={on_file_change} multiple=false/>
+        //</div>
     )
 }
 
@@ -81,6 +94,7 @@ pub fn tag(
             <h2>{ comm }</h2>
             <h2>{ uslt }</h2>
             <Chapters chapters={chaps}/>
+            <div class="button" onclick={save_clicked}>{"asdsad"}</div>
             <button onclick={save_clicked}>{"Save"}</button>
         </div>
     }
@@ -103,11 +117,11 @@ fn chapters(ChaptersProps { chapters }: &ChaptersProps) -> Html {
             }
         });
         c.push(html! {
-            <div>{ id } { ":" } { name } </div>
+            <div class="row">{ id } { ":" } { name } </div>
         });
     }
     html! {
-        <div>
+        <div class="rows">
             { for c }
         </div>
     }
