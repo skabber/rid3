@@ -6,7 +6,7 @@ use components::{FileLoader, ID3Tag};
 mod state;
 use state::{AppAction, AppState};
 
-use gloo::console::log;
+use gloo::console::{__macro::JsValue, log};
 use gloo_file::{callbacks::FileReader, File};
 use web_sys::{Event, HtmlInputElement};
 
@@ -65,14 +65,22 @@ fn App() -> Html {
         })
     };
 
-    let _s = state.clone();
+    let s = state.clone();
     let save_clicked = Callback::from(move |_: MouseEvent| {
         log!("save clicked");
-        // let wr = s.bytes.clone();
-        // let r = s.tag.as_ref().unwrap().write_to(wr, id3::Version::Id3v23);
-        // let blob = web_sys::Blob::new_with_u8_array_sequence(wr).unwrap();
-        // web_sys::Url::create_object_url
-        // log!(format!("{:?}", s.name));
+        let bytes = s.bytes.as_slice();
+        let uint8arr = js_sys::Uint8Array::new(&unsafe { js_sys::Uint8Array::view(bytes) }.into());
+        let array = js_sys::Array::new();
+        array.push(&uint8arr.buffer());
+        let blob = web_sys::Blob::new_with_u8_array_sequence_and_options(
+            &array,
+            web_sys::BlobPropertyBag::new()
+                .type_("audio/mpeg3;audio/x-mpeg-3;video/mpeg;video/x-mpeg;text/xml"),
+        )
+        .unwrap();
+        let download_url = web_sys::Url::create_object_url_with_blob(&blob).unwrap(); // Zero bytes
+
+        log!(format!("{:?}", download_url));
     });
 
     html! {
