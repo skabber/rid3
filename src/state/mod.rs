@@ -58,7 +58,7 @@ impl Reducible for AppState {
                     frames: self.frames.clone(),
                     reader_tasks: self.reader_tasks.clone(),
                     name: self.name.clone(),
-                    bytes: self.bytes.clone(),
+                    bytes: contents,
                 })
             }
             AppAction::TitleChanged(title) => {
