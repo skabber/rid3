@@ -27,10 +27,27 @@ pub fn file_loader(FileLoaderProps { on_file_change }: &FileLoaderProps) -> Html
               </span>
             </label>
           </div>
-        //<div>
-        //    <input type="file" accept="audio/mp3,audio/*" onchange={on_file_change} multiple=false/>
-        //</div>
     )
+}
+
+#[derive(Properties, PartialEq)]
+struct ID3Props {
+    pic: String,
+}
+
+#[function_component(ID3Image)]
+fn id3_image(ID3Props{pic}: &ID3Props) -> Html {
+    if pic.is_empty() {
+        html!{
+            <div class="has-background-light">{" Upload File"}</div>
+        }
+    } else {
+        html! {
+            <div>
+                <img src={format!("data:image/png;base64,{}", pic)} width="200" />
+            </div>
+        }
+    }
 }
 
 #[derive(Properties, PartialEq)]
@@ -39,6 +56,7 @@ pub struct ID3TagProps {
     pub on_title_change: Callback<Event>,
     pub name: String,
     pub save_clicked: Callback<MouseEvent>,
+    pub clear_clicked: Callback<MouseEvent>,
 }
 
 #[function_component(ID3Tag)]
@@ -48,6 +66,7 @@ pub fn tag(
         on_title_change,
         name,
         save_clicked,
+        clear_clicked,
     }: &ID3TagProps,
 ) -> Html {
     // let mut name = "";
@@ -87,15 +106,27 @@ pub fn tag(
 
     html! {
         <div>
-            <img src={format!("data:image/png;base64,{}", pic)} width="500" />
-            <h1>{"Title:"} <input type="text" name="tile" value={ name.clone() } onchange={on_title_change}/></h1>
-            <h2>{ tpe1 }</h2>
-            <h2>{ tit2 }</h2>
-            <h2>{ comm }</h2>
-            <h2>{ uslt }</h2>
+            <id3_image pic={pic.clone()}/>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>{"ID3 Tag"}</th>
+                        <th>{"value"}</th>
+                    </tr>
+                </thead>
+                <tr>
+                    <td><span class="tag">{"Title:"}</span></td>
+                    <td><input type="text" name="tile" value={ name.clone() } onchange={on_title_change}/></td>
+                </tr>
+                <tr><td><span class="tag">{"TPE1:"}</span></td><td>{ tpe1 }</td></tr>
+                <tr><td><span class="tag">{"TIT2"}</span></td><td>{ tit2 }</td></tr>
+                <tr><td><span class="tag">{"COMM"}</span></td><td>{ comm }</td></tr>
+                <tr><td><span class="tag">{"USLT"}</span></td><td>{ uslt }</td></tr>
+            </table>
             <Chapters chapters={chaps}/>
-            <div class="button" onclick={save_clicked}>{"asdsad"}</div>
-            <button onclick={save_clicked}>{"Save"}</button>
+            <button class="button is-info" onclick={save_clicked}>{"Save"}</button>
+            <button class="button" onclick={clear_clicked}>{" Clear "}</button>
+            //<button class="is-info" onclick={save_clicked}>{"Save"}</button>
         </div>
     }
 }

@@ -12,12 +12,15 @@ pub struct AppState {
     pub reader_tasks: Option<Rc<FileReader>>,
     pub name: String,
     pub bytes: Vec<u8>,
+    pub url: String,
 }
 
 pub enum AppAction {
     MP3Ready(Vec<u8>),
     AddReader(FileReader),
     TitleChanged(String),
+    URLCreated(String),
+    ClearClicked,
 }
 
 impl Reducible for AppState {
@@ -34,6 +37,7 @@ impl Reducible for AppState {
                     reader_tasks: Some(Rc::new(reader)),
                     name: self.name.clone(),
                     bytes: self.bytes.clone(),
+                    url: self.url.clone(),
                 })
             }
             AppAction::MP3Ready(contents) => {
@@ -59,6 +63,7 @@ impl Reducible for AppState {
                     reader_tasks: self.reader_tasks.clone(),
                     name: self.name.clone(),
                     bytes: contents,
+                    url: self.url.clone(),
                 })
             }
             AppAction::TitleChanged(title) => {
@@ -70,28 +75,30 @@ impl Reducible for AppState {
                     reader_tasks: self.reader_tasks.clone(),
                     name: title,
                     bytes: self.bytes.clone(),
+                    url: self.url.clone(),
                 })
-            } // AppAction::AddTag(tag) => {
-              //     log!("add tag");
-              //     std::rc::Rc::new(AppState {
-              //         mp3: self.mp3.clone(),
-              //         tag: self.tag.clone(),
-              //         frames: self.frames.clone(),
-              //         reader_tasks: self.reader_tasks.clone(),
-              //     })
-              // } // AppAction::MP3Ready(contents: Vec<u8>) => {}
-
-              // AppAction::Add(item) => {
-              //     log!("add item");
-              //     let mut items = self.items.clone();
-              //     items.push(Asset {
-              //         url: item.url,
-              //         size: item.size,
-              //         browser_download_url: item.browser_download_url,
-              //         name: item.name,
-              //     });
-              //     std::rc::Rc::new(AppState { items })
-              // }
+            }
+            AppAction::URLCreated(url) => {
+                log!("title changed");
+                std::rc::Rc::new(AppState {
+                    mp3: self.mp3.clone(),
+                    tag: self.tag.clone(),
+                    frames: self.frames.clone(),
+                    reader_tasks: self.reader_tasks.clone(),
+                    name: self.name.clone(),
+                    bytes: self.bytes.clone(),
+                    url
+                })
+            },
+            AppAction::ClearClicked => std::rc::Rc::new(AppState {
+                mp3: None,
+                tag: None,
+                frames: Vec::new(),
+                reader_tasks: None,
+                name: String::new(),
+                bytes: Vec::new(),
+                url: String::new(),
+            }), 
         }
     }
 }

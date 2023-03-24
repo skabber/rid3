@@ -6,9 +6,10 @@ use components::{FileLoader, ID3Tag};
 mod state;
 use state::{AppAction, AppState};
 
-use gloo::console::{__macro::JsValue, log};
+use gloo::console::log;
 use gloo_file::{callbacks::FileReader, File};
 use web_sys::{Event, HtmlInputElement};
+// use js_sys::Uint8Array;
 
 #[function_component]
 fn App() -> Html {
@@ -19,6 +20,7 @@ fn App() -> Html {
         reader_tasks: None,
         name: String::new(),
         bytes: Vec::new(),
+        url: String::new(),
     });
 
     let _tasks = use_state(Vec::<FileReader>::new);
@@ -80,15 +82,41 @@ fn App() -> Html {
         .unwrap();
         let download_url = web_sys::Url::create_object_url_with_blob(&blob).unwrap(); // Zero bytes
 
-        log!(format!("{:?}", download_url));
+        // log!(format!("{:?}", download_url));
+        // s.dispatch(AppAction::URLCreated(download_url));
+        change_location(download_url.as_str());
+    });
+
+    let s= state.clone();
+    let clear_clicked = Callback::from(move |_: MouseEvent| {
+        log!("clear clicked");
+        s.dispatch(AppAction::ClearClicked);
     });
 
     html! {
-        <div>
-            <FileLoader on_file_change={on_file_change} />
-            <ID3Tag tag={state.tag.clone()} on_title_change={on_title_change} name={state.name.clone()} save_clicked={save_clicked}/>
+        <div class="columns">
+            <div class="column has-background-link">
+                <ID3Tag tag={state.tag.clone()} on_title_change={on_title_change} name={state.name.clone()} save_clicked={save_clicked} clear_clicked={clear_clicked}/>
+                <div>{ state.url.clone() }</div>
+            </div>
+            <div class="column has-background-link-light">
+                <FileLoader on_file_change={on_file_change} />
+            </div>
         </div>
     }
+}
+
+fn change_location(url: &str) {
+    let window: web_sys::Window = web_sys::window().expect("window not available");
+    window
+        .location()
+        .set_href(url)
+        .expect("location change failed");
+}
+
+fn alert(message: &str) {
+    let window: web_sys::Window = web_sys::window().expect("window not available");
+    window.alert_with_message(message).expect("alert failed");
 }
 
 fn main() {
