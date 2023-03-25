@@ -799,7 +799,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "ride3"
+name = "rid3"
 version = "0.1.0"
 dependencies = [
  "base64",
