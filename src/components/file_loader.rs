@@ -36,9 +36,9 @@ struct ID3Props {
 }
 
 #[function_component(ID3Image)]
-fn id3_image(ID3Props{pic}: &ID3Props) -> Html {
+fn id3_image(ID3Props { pic }: &ID3Props) -> Html {
     if pic.is_empty() {
-        html!{
+        html! {
             <div class="has-background-light">{" Upload File"}</div>
         }
     } else {
@@ -69,7 +69,6 @@ pub fn tag(
         clear_clicked,
     }: &ID3TagProps,
 ) -> Html {
-    // let mut name = "";
     let mut tpe1 = "";
     let mut tit2 = "";
     let mut uslt = "";
@@ -94,7 +93,7 @@ pub fn tag(
                 }
             } else if f.id() == "APIC" {
                 if let Some(p) = f.content().picture() {
-                    log!(format!("{:?}", p.mime_type));
+                    // log!(format!("{:?}", p.mime_type));
                     pic = BASE64.encode(&p.data);
                 }
             } else if f.id() != "CHAP" {
@@ -106,7 +105,7 @@ pub fn tag(
 
     html! {
         <div>
-            <id3_image pic={pic.clone()}/>
+            <ID3Image pic={pic.clone()}/>
             <table class="table">
                 <thead>
                     <tr>

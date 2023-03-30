@@ -83,11 +83,26 @@ fn App() -> Html {
         let download_url = web_sys::Url::create_object_url_with_blob(&blob).unwrap(); // Zero bytes
 
         // log!(format!("{:?}", download_url));
-        // s.dispatch(AppAction::URLCreated(download_url));
-        change_location(download_url.as_str());
+        // change_location(download_url.as_str());
+
+        let window: web_sys::Window = web_sys::window().expect("window not available");
+        let element = window.document().unwrap().create_element("a").unwrap();
+        let r = element.set_attribute("href", download_url.as_str());
+        element.set_attribute("download", "test.mp3");
+        window
+            .document()
+            .unwrap()
+            .body()
+            .unwrap()
+            .append_child(&element);
+        // element.;
+        // window
+        //     .location()
+        //     .set_href(url)
+        //     .expect("location change failed");
     });
 
-    let s= state.clone();
+    let s = state.clone();
     let clear_clicked = Callback::from(move |_: MouseEvent| {
         log!("clear clicked");
         s.dispatch(AppAction::ClearClicked);
