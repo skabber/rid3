@@ -8,6 +8,7 @@ use state::{AppAction, AppState};
 
 use gloo::console::log;
 use gloo_file::{callbacks::FileReader, File};
+use id3::Version;
 use web_sys::{Event, HtmlInputElement};
 // use js_sys::Uint8Array;
 
@@ -70,7 +71,11 @@ fn App() -> Html {
     let s = state.clone();
     let save_clicked = Callback::from(move |_: MouseEvent| {
         log!("save clicked");
-        let bytes = s.bytes.as_slice();
+        let tag = s.tag.clone().unwrap();
+        let b = s.bytes.clone();
+        tag.write_to(b, Version::Id3v23);
+        let bytes = b.as_slice();
+
         let uint8arr = js_sys::Uint8Array::new(&unsafe { js_sys::Uint8Array::view(bytes) }.into());
         let array = js_sys::Array::new();
         array.push(&uint8arr.buffer());
