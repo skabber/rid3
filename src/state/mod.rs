@@ -1,6 +1,7 @@
 use gloo::console::log;
 use gloo_file::{callbacks::FileReader, File};
-use id3::{self, Frame, Tag};
+// use id3::{self, Frame, Tag};
+use id3::{Content, Frame, Tag, TagLike};
 use std::rc::Rc;
 use yew::prelude::*;
 
@@ -68,9 +69,12 @@ impl Reducible for AppState {
             }
             AppAction::TitleChanged(title) => {
                 log!("title changed");
+                let mut t = self.tag.clone().unwrap();
+                t.add_frame(Frame::with_content("TALB", Content::Text(title.clone())));
+                log!(format!("{:?}", t).as_str());
                 std::rc::Rc::new(AppState {
                     mp3: self.mp3.clone(),
-                    tag: self.tag.clone(),
+                    tag: Some(t),
                     frames: self.frames.clone(),
                     reader_tasks: self.reader_tasks.clone(),
                     name: title,
@@ -87,9 +91,9 @@ impl Reducible for AppState {
                     reader_tasks: self.reader_tasks.clone(),
                     name: self.name.clone(),
                     bytes: self.bytes.clone(),
-                    url
+                    url,
                 })
-            },
+            }
             AppAction::ClearClicked => std::rc::Rc::new(AppState {
                 mp3: None,
                 tag: None,
@@ -98,7 +102,7 @@ impl Reducible for AppState {
                 name: String::new(),
                 bytes: Vec::new(),
                 url: String::new(),
-            }), 
+            }),
         }
     }
 }

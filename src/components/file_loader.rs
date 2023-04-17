@@ -69,6 +69,7 @@ pub fn tag(
         clear_clicked,
     }: &ID3TagProps,
 ) -> Html {
+    let mut talb = String::new();
     let mut tpe1 = "";
     let mut tit2 = "";
     let mut uslt = "";
@@ -78,7 +79,7 @@ pub fn tag(
     if let Some(tag) = tag {
         for f in tag.frames() {
             if f.id() == "TALB" {
-                // name = f.content().text().unwrap();
+                talb = f.content().text().unwrap().into();
             } else if f.id() == "TPE1" {
                 tpe1 = f.content().text().unwrap();
             } else if f.id() == "TIT2" {
@@ -97,7 +98,7 @@ pub fn tag(
                     pic = BASE64.encode(&p.data);
                 }
             } else if f.id() != "CHAP" {
-                log!(format!("{:?}", f));
+                log!(format!("xxx {:?}", f));
             }
         }
         chaps = tag.chapters().cloned().collect();
@@ -115,7 +116,7 @@ pub fn tag(
                 </thead>
                 <tr>
                     <td><span class="tag">{"Title:"}</span></td>
-                    <td><input type="text" name="tile" value={ name.clone() } onchange={on_title_change}/></td>
+                    <td><input type="text" name="tile" value={ talb } onchange={on_title_change}/></td>
                 </tr>
                 <tr><td><span class="tag">{"TPE1:"}</span></td><td>{ tpe1 }</td></tr>
                 <tr><td><span class="tag">{"TIT2"}</span></td><td>{ tit2 }</td></tr>

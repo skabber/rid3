@@ -72,13 +72,19 @@ fn App() -> Html {
     let save_clicked = Callback::from(move |_: MouseEvent| {
         log!("save clicked");
         let tag = s.tag.clone().unwrap();
-        let b = s.bytes.clone();
-        tag.write_to(b, Version::Id3v23);
+        log!(format!("1 {:?}", tag));
+        let mut b = s.bytes.clone();
+        log!(format!("2 {:?}", b.len()));
+        tag.write_to(&mut b, Version::Id3v23).unwrap();
         let bytes = b.as_slice();
+        log!(format!("3 {:?}", bytes.len()));
 
         let uint8arr = js_sys::Uint8Array::new(&unsafe { js_sys::Uint8Array::view(bytes) }.into());
+        log!(format!("4 {:?}", uint8arr.length()));
         let array = js_sys::Array::new();
         array.push(&uint8arr.buffer());
+        log!(format!("5 {:?}", array));
+
         let blob = web_sys::Blob::new_with_u8_array_sequence_and_options(
             &array,
             web_sys::BlobPropertyBag::new()
