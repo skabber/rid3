@@ -70,7 +70,8 @@ impl Reducible for AppState {
             AppAction::TitleChanged(title) => {
                 log!("title changed");
                 let mut t = self.tag.clone().unwrap();
-                t.add_frame(Frame::with_content("TALB", Content::Text(title.clone())));
+                t.set_album(title.clone());
+                // t.add_frame(Frame::with_content("TALB", Content::Text(title.clone())));
                 log!(format!("{:?}", t).as_str());
                 std::rc::Rc::new(AppState {
                     mp3: self.mp3.clone(),

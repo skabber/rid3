@@ -9,8 +9,8 @@ use state::{AppAction, AppState};
 use gloo::console::log;
 use gloo_file::{callbacks::FileReader, File};
 use id3::Version;
+use std::io::Cursor;
 use web_sys::{Event, HtmlInputElement};
-// use js_sys::Uint8Array;
 
 #[function_component]
 fn App() -> Html {
@@ -73,9 +73,19 @@ fn App() -> Html {
         log!("save clicked");
         let tag = s.tag.clone().unwrap();
         log!(format!("1 {:?}", tag));
+
         let mut b = s.bytes.clone();
         log!(format!("2 {:?}", b.len()));
-        tag.write_to(&mut b, Version::Id3v23).unwrap();
+
+        let curs = Cursor::new(&mut b);
+
+        // find og tag
+        // let location = id3::stream::tag::locate_id3v2(curs);
+        // log!(format!("3 {:?}", location));
+
+        tag.write_to(curs, Version::Id3v23).unwrap();
+
+        // tag.write_to(&mut b, Version::Id3v23).unwrap();
         let bytes = b.as_slice();
         log!(format!("3 {:?}", bytes.len()));
 
