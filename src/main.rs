@@ -119,7 +119,7 @@ fn App() -> Html {
         // element.;
         // window
         //     .location()
-        //     .set_href(url)
+        //     .set_href(download_url.as_str())
         //     .expect("location change failed");
     });
 
