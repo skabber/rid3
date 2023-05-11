@@ -1,7 +1,7 @@
 use gloo::console::log;
 use gloo_file::{callbacks::FileReader, File};
 // use id3::{self, Frame, Tag};
-use id3::{Content, Frame, Tag, TagLike};
+use id3::{Frame, Tag, TagLike};
 use std::rc::Rc;
 use yew::prelude::*;
 
@@ -19,7 +19,7 @@ pub struct AppState {
 pub enum AppAction {
     MP3Ready(Vec<u8>),
     AddReader(FileReader),
-    TitleChanged(String),
+    TitleChanged(String, String),
     URLCreated(String),
     ClearClicked,
 }
@@ -67,10 +67,11 @@ impl Reducible for AppState {
                     url: self.url.clone(),
                 })
             }
-            AppAction::TitleChanged(title) => {
+            AppAction::TitleChanged(att, title) => {
                 log!("title changed");
                 let mut t = self.tag.clone().unwrap();
-                t.set_album(title.clone());
+                // t.set_album(title.clone());
+                t.set_text(att.as_str(), title.clone());
                 // t.add_frame(Frame::with_content("TALB", Content::Text(title.clone())));
                 log!(format!("{:?}", t).as_str());
                 std::rc::Rc::new(AppState {

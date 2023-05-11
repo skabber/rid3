@@ -53,8 +53,7 @@ fn id3_image(ID3Props { pic }: &ID3Props) -> Html {
 #[derive(Properties, PartialEq)]
 pub struct ID3TagProps {
     pub tag: Option<Tag>,
-    pub on_title_change: Callback<Event>,
-    pub name: String,
+    pub on_value_change: Callback<Event>,
     pub save_clicked: Callback<MouseEvent>,
     pub clear_clicked: Callback<MouseEvent>,
 }
@@ -63,36 +62,17 @@ pub struct ID3TagProps {
 pub fn tag(
     ID3TagProps {
         tag,
-        on_title_change,
-        name,
+        on_value_change,
         save_clicked,
         clear_clicked,
     }: &ID3TagProps,
 ) -> Html {
-    let mut talb = String::new();
-    let mut tpe1 = "";
-    let mut tit2 = "";
-    let mut uslt = "";
-    let mut comm = "";
     let mut chaps = Vec::new();
+    let mut frames = Vec::new();
     let mut pic = String::new();
     if let Some(tag) = tag {
         for f in tag.frames() {
-            if f.id() == "TALB" {
-                talb = f.content().text().unwrap().into();
-            } else if f.id() == "TPE1" {
-                tpe1 = f.content().text().unwrap();
-            } else if f.id() == "TIT2" {
-                tit2 = f.content().text().unwrap();
-            } else if f.id() == "USLT" {
-                if let Some(l) = f.content().lyrics() {
-                    uslt = l.text.as_str();
-                }
-            } else if f.id() == "COMM" {
-                if let Some(c) = f.content().comment() {
-                    comm = c.text.as_str();
-                }
-            } else if f.id() == "APIC" {
+            if f.id() == "APIC" {
                 if let Some(p) = f.content().picture() {
                     // log!(format!("{:?}", p.mime_type));
                     pic = BASE64.encode(&p.data);
@@ -101,6 +81,7 @@ pub fn tag(
                 log!(format!("xxx {:?}", f));
             }
         }
+        frames = tag.frames().cloned().filter(|f| f.id() != "CHAP").collect();
         chaps = tag.chapters().cloned().collect();
     }
 
@@ -114,21 +95,36 @@ pub fn tag(
                         <th>{"value"}</th>
                     </tr>
                 </thead>
-                <tr>
-                    <td><span class="tag">{"Title:"}</span></td>
-                    <td><input type="text" name="tile" value={ talb } onchange={on_title_change}/></td>
-                </tr>
-                <tr><td><span class="tag">{"TPE1:"}</span></td><td>{ tpe1 }</td></tr>
-                <tr><td><span class="tag">{"TIT2"}</span></td><td>{ tit2 }</td></tr>
-                <tr><td><span class="tag">{"COMM"}</span></td><td>{ comm }</td></tr>
-                <tr><td><span class="tag">{"USLT"}</span></td><td>{ uslt }</td></tr>
             </table>
+            <Frames frames={frames} on_value_change={on_value_change}/>
             <Chapters chapters={chaps}/>
             <button class="button is-info" onclick={save_clicked}>{"Save"}</button>
             <button class="button" onclick={clear_clicked}>{" Clear "}</button>
             //<button class="is-info" onclick={save_clicked}>{"Save"}</button>
         </div>
     }
+}
+
+#[derive(Properties, PartialEq)]
+struct FramesProps {
+    frames: Vec<id3::frame::Frame>,
+    on_value_change: Callback<Event>,
+}
+
+#[function_component(Frames)]
+fn tags(FramesProps { frames, on_value_change }: &FramesProps) -> Html {
+    frames.iter().map(|f| {
+        let name = String::from(f.id());
+        
+        let value = String::from(f.content().text().unwrap_or(""));
+        html! { 
+            <tr>
+                <td><span>{ name.clone() }</span></td>
+                <td><input type="text" name={ name } value={ value } onchange={on_value_change}/></td>
+            </tr>
+        }
+     }).collect()
+    
 }
 
 #[derive(Properties, PartialEq)]

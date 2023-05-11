@@ -32,7 +32,8 @@ fn App() -> Html {
             let state = state_closure.clone();
             let input: HtmlInputElement = e.target_unchecked_into();
             let title = input.value();
-            state.dispatch(AppAction::TitleChanged(title));
+            let att = input.get_attribute("name").unwrap();
+            state.dispatch(AppAction::TitleChanged(att, title));
         })
     };
 
@@ -108,14 +109,17 @@ fn App() -> Html {
 
         let window: web_sys::Window = web_sys::window().expect("window not available");
         let element = window.document().unwrap().create_element("a").unwrap();
-        let r = element.set_attribute("href", download_url.as_str());
-        element.set_attribute("download", "test.mp3");
+        element
+            .set_attribute("href", download_url.as_str())
+            .unwrap();
+        element.set_attribute("download", "test.mp3").unwrap();
         window
             .document()
             .unwrap()
             .body()
             .unwrap()
-            .append_child(&element);
+            .append_child(&element)
+            .unwrap();
         // element.;
         // window
         //     .location()
@@ -132,7 +136,7 @@ fn App() -> Html {
     html! {
         <div class="columns">
             <div class="column has-background-link">
-                <ID3Tag tag={state.tag.clone()} on_title_change={on_title_change} name={state.name.clone()} save_clicked={save_clicked} clear_clicked={clear_clicked}/>
+                <ID3Tag tag={state.tag.clone()} on_value_change={on_title_change} save_clicked={save_clicked} clear_clicked={clear_clicked}/>
                 <div>{ state.url.clone() }</div>
             </div>
             <div class="column has-background-link-light">
@@ -142,7 +146,7 @@ fn App() -> Html {
     }
 }
 
-fn change_location(url: &str) {
+fn _change_location(url: &str) {
     let window: web_sys::Window = web_sys::window().expect("window not available");
     window
         .location()
@@ -150,7 +154,7 @@ fn change_location(url: &str) {
         .expect("location change failed");
 }
 
-fn alert(message: &str) {
+fn _alert(message: &str) {
     let window: web_sys::Window = web_sys::window().expect("window not available");
     window.alert_with_message(message).expect("alert failed");
 }
