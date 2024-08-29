@@ -1,7 +1,7 @@
 use yew::prelude::*;
 
 mod components;
-use components::{FileLoader, ID3Tag};
+use components::{FileLoader, ID3Tag, Popup};
 
 mod state;
 use state::{AppAction, AppState};
@@ -133,7 +133,19 @@ fn App() -> Html {
         s.dispatch(AppAction::ClearClicked);
     });
 
+    let show_popup = use_state(|| false);
+
+    let toggle_popup = {
+        let show_popup = show_popup.clone();
+        Callback::from(move |_| show_popup.set(!*show_popup))
+    };
+
     html! {
+        <>
+            <button onclick={toggle_popup.clone()}>{"Show Popup"}</button>
+            if *show_popup {
+                <Popup on_close={toggle_popup.clone()} />
+            }
         <div class="columns">
             <div class="column has-background-link">
                 <ID3Tag tag={state.tag.clone()} on_value_change={on_title_change} save_clicked={save_clicked} clear_clicked={clear_clicked}/>
