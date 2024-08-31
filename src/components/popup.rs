@@ -2,14 +2,14 @@ use yew::prelude::*;
 
 #[derive(Properties, PartialEq)]
 pub struct PopupProps {
-    pub on_close: Callback<()>,
+    pub on_close: Callback<MouseEvent>,
 }
 
-#[function_component]
-pub fn Popup(PopupProps { on_close }: &PopupProps) -> Html {
+#[function_component(Popup)]
+pub fn PopupComponent(PopupProps { on_close }: &PopupProps) -> Html {
     let on_close_click = {
         let on_close = on_close.clone();
-        Callback::from(move |_| on_close.emit(()))
+        Callback::from(move |event: MouseEvent| on_close.emit(event))
     };
 
     html! {

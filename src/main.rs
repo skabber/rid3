@@ -137,7 +137,7 @@ fn App() -> Html {
 
     let toggle_popup = {
         let show_popup = show_popup.clone();
-        Callback::from(move |_| show_popup.set(!*show_popup))
+        Callback::from(move |_: MouseEvent| show_popup.set(!*show_popup))
     };
 
     html! {
@@ -155,6 +155,7 @@ fn App() -> Html {
                 <FileLoader on_file_change={on_file_change} />
             </div>
         </div>
+        </>
     }
 }
 
