@@ -142,18 +142,21 @@ fn App() -> Html {
 
     html! {
         <>
-            <button onclick={toggle_popup.clone()}>{"Show Popup"}</button>
+            <button class="button" onclick={toggle_popup.clone()}>{"Show Popup"}</button>
             if *show_popup {
                 <Popup on_close={toggle_popup.clone()} />
             }
         <div class="columns">
-            <div class="column has-background-link">
+            <div class="column">
                 <ID3Tag tag={state.tag.clone()} on_value_change={on_title_change} save_clicked={save_clicked} clear_clicked={clear_clicked}/>
                 <div>{ state.url.clone() }</div>
             </div>
             <div class="column has-background-link-light">
                 <FileLoader on_file_change={on_file_change} />
             </div>
+        </div>
+        <div>
+
         </div>
         </>
     }

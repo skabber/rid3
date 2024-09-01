@@ -72,12 +72,14 @@ pub fn tag(
     let mut pic = String::new();
     if let Some(tag) = tag {
         for f in tag.frames() {
-            if f.id() == "APIC" {
-                if let Some(p) = f.content().picture() {
-                    // log!(format!("{:?}", p.mime_type));
-                    pic = BASE64.encode(&p.data);
-                }
-            } else if f.id() != "CHAP" {
+            log!(format!("{:?}", f.id()));
+            // if f.id() == "APIC" {
+            //     if let Some(p) = f.content().picture() {
+            //         log!(format!("{:?}", p.mime_type));
+            //         pic = BASE64.encode(&p.data);
+            //     }
+            // } else
+            if f.id() != "CHAP" {
                 log!(format!("xxx {:?}", f));
             }
         }
@@ -112,19 +114,30 @@ struct FramesProps {
 }
 
 #[function_component(Frames)]
-fn tags(FramesProps { frames, on_value_change }: &FramesProps) -> Html {
+fn tags(
+    FramesProps {
+        frames,
+        on_value_change,
+    }: &FramesProps,
+) -> Html {
     frames.iter().map(|f| {
         let name = String::from(f.id());
-        
-        let value = String::from(f.content().text().unwrap_or(""));
-        html! { 
+        let mut value = "".to_string();
+        if name == "USLT" {
+            value = f.content().lyrics().unwrap().text.to_string();
+        } else if name == "COMM" {
+            value = f.content().comment().unwrap().text.to_string();
+        } else {
+            value = String::from(f.content().text().unwrap_or(""));
+        }
+
+        html! {
             <tr>
                 <td><span>{ name.clone() }</span></td>
                 <td><input type="text" name={ name } value={ value } onchange={on_value_change}/></td>
             </tr>
         }
      }).collect()
-    
 }
 
 #[derive(Properties, PartialEq)]
@@ -137,14 +150,20 @@ fn chapters(ChaptersProps { chapters }: &ChaptersProps) -> Html {
     let mut c = Vec::new();
     for chapter in chapters {
         let id = chapter.element_id.clone();
+        let start_time = chapter.start_time;
         let mut name = "";
+        let mut link = "".to_string();
         chapter.frames.iter().for_each(|f| {
+            log!(format!("{:?}", f.id()));
+            if f.id() == "WXXX" {
+                link = f.content().extended_link().unwrap().link.to_string();
+            }
             if let Some(text) = f.content().text() {
                 name = text;
             }
         });
         c.push(html! {
-            <div class="row">{ id } { ":" } { name } </div>
+            <div class="row">{ id } { ":" } { name } {":"} { start_time } {":"} {link} </div>
         });
     }
     html! {
