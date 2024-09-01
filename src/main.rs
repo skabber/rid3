@@ -104,7 +104,7 @@ fn App() -> Html {
         .unwrap();
         let download_url = web_sys::Url::create_object_url_with_blob(&blob).unwrap(); // Zero bytes
 
-        // log!(format!("{:?}", download_url));
+        log!(format!("{:?}", download_url));
         // change_location(download_url.as_str());
 
         let window: web_sys::Window = web_sys::window().expect("window not available");
@@ -140,12 +140,38 @@ fn App() -> Html {
         Callback::from(move |_: MouseEvent| show_popup.set(!*show_popup))
     };
 
+    let mut blob_url: Option<String> = None;
+
+    // create a blob of the mp3 file bytes
+    if state.bytes.len() > 0 {
+        let uint8arr = js_sys::Uint8Array::new(
+            &unsafe { js_sys::Uint8Array::view(&state.bytes.clone()) }.into(),
+        );
+        let array = js_sys::Array::new();
+        array.push(&uint8arr.buffer());
+        let blob = web_sys::Blob::new_with_u8_array_sequence_and_options(
+            &array,
+            web_sys::BlobPropertyBag::new()
+                .type_("audio/mpeg3;audio/x-mpeg-3;video/mpeg;video/x-mpeg;text/xml"),
+        )
+        .unwrap();
+        let download_url = web_sys::Url::create_object_url_with_blob(&blob).unwrap();
+        // Zero bytes
+        log!(format!("{:?}", download_url));
+        blob_url = Some(download_url);
+    };
+
     html! {
         <>
             <button class="button" onclick={toggle_popup.clone()}>{"Show Popup"}</button>
             if *show_popup {
                 <Popup on_close={toggle_popup.clone()} />
             }
+            if blob_url.is_some() {
+                <audio controls=true src={blob_url.unwrap()}></audio>
+                // <a href={blob_url.clone().unwrap()} download="test.mp3">{"Download"}</a>
+            }
+
         <div class="columns">
             <div class="column">
                 <ID3Tag tag={state.tag.clone()} on_value_change={on_title_change} save_clicked={save_clicked} clear_clicked={clear_clicked}/>

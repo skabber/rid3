@@ -182,7 +182,7 @@ fn chapters(ChaptersProps { chapters }: &ChaptersProps) -> Html {
             <tr>
                 <td>{ id }</td>
                 <td>{ name }</td>
-                <td>{ start_time } {"-"} { end_time }</td>
+                <td>{ start_time/1000 } {"-"} { end_time/1000 }</td>
                 <td>
                     if let Some(link) = link {
                         <a href={link.clone()}>{link}</a>

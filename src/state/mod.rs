@@ -43,7 +43,7 @@ impl Reducible for AppState {
             }
             AppAction::MP3Ready(contents) => {
                 log!("mp3 ready");
-
+                log!(format!("{:?}", contents.len()).as_str());
                 let tag = id3::Tag::read_from(contents.as_slice()).unwrap();
                 // log!(format!("{:?}", tag.version()).as_str());
 
