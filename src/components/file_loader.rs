@@ -73,17 +73,20 @@ pub fn tag(
     if let Some(tag) = tag {
         for f in tag.frames() {
             log!(format!("{:?}", f.id()));
-            // if f.id() == "APIC" {
-            //     if let Some(p) = f.content().picture() {
-            //         log!(format!("{:?}", p.mime_type));
-            //         pic = BASE64.encode(&p.data);
-            //     }
-            // } else
-            if f.id() != "CHAP" {
+            if f.id() == "APIC" {
+                if let Some(p) = f.content().picture() {
+                    log!(format!("{:?}", p.mime_type));
+                    pic = BASE64.encode(&p.data);
+                }
+            } else if f.id() != "CHAP" {
                 log!(format!("xxx {:?}", f));
             }
         }
-        frames = tag.frames().cloned().filter(|f| f.id() != "CHAP").collect();
+        frames = tag
+            .frames()
+            .cloned()
+            .filter(|f| f.id() != "CHAP" && f.id() != "APIC")
+            .collect();
         chaps = tag.chapters().cloned().collect();
     }
 
@@ -127,6 +130,8 @@ fn tags(
             value = f.content().lyrics().unwrap().text.to_string();
         } else if name == "COMM" {
             value = f.content().comment().unwrap().text.to_string();
+        } else if name == "CTOC" {
+            value = f.content().table_of_contents().unwrap().elements.join(", ");
         } else {
             value = String::from(f.content().text().unwrap_or(""));
         }
