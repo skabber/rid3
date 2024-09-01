@@ -135,13 +135,13 @@ fn tags(
 ) -> Html {
     frames.iter().map(|f| {
         let name = String::from(f.id());
-        let mut value = "".to_string();
+        let value: String;
         if name == "USLT" {
             value = f.content().lyrics().unwrap().text.to_string();
         } else if name == "COMM" {
             value = f.content().comment().unwrap().text.to_string();
         } else if name == "CTOC" {
-            value = f.content().table_of_contents().unwrap().elements.join(", ");
+            value = f.content().table_of_contents().unwrap().elements.join(", ")
         } else {
             value = String::from(f.content().text().unwrap_or(""));
         }
