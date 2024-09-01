@@ -96,12 +96,10 @@ fn App() -> Html {
         array.push(&uint8arr.buffer());
         log!(format!("5 {:?}", array));
 
-        let blob = web_sys::Blob::new_with_u8_array_sequence_and_options(
-            &array,
-            web_sys::BlobPropertyBag::new()
-                .type_("audio/mpeg3;audio/x-mpeg-3;video/mpeg;video/x-mpeg;text/xml"),
-        )
-        .unwrap();
+        let bpb = web_sys::BlobPropertyBag::new();
+        bpb.set_type("audio/mpeg3;audio/x-mpeg-3;video/mpeg;video/x-mpeg;text/xml");
+
+        let blob = web_sys::Blob::new_with_u8_array_sequence_and_options(&array, &bpb).unwrap();
         let download_url = web_sys::Url::create_object_url_with_blob(&blob).unwrap(); // Zero bytes
 
         log!(format!("{:?}", download_url));
@@ -149,12 +147,10 @@ fn App() -> Html {
         );
         let array = js_sys::Array::new();
         array.push(&uint8arr.buffer());
-        let blob = web_sys::Blob::new_with_u8_array_sequence_and_options(
-            &array,
-            web_sys::BlobPropertyBag::new()
-                .type_("audio/mpeg3;audio/x-mpeg-3;video/mpeg;video/x-mpeg;text/xml"),
-        )
-        .unwrap();
+
+        let bpb = web_sys::BlobPropertyBag::new();
+        bpb.set_type("audio/mpeg3;audio/x-mpeg-3;video/mpeg;video/x-mpeg;text/xml");
+        let blob = web_sys::Blob::new_with_u8_array_sequence_and_options(&array, &bpb).unwrap();
         let download_url = web_sys::Url::create_object_url_with_blob(&blob).unwrap();
         // Zero bytes
         log!(format!("{:?}", download_url));
