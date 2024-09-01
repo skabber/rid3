@@ -2,6 +2,7 @@ use gloo::console::log;
 use gloo_file::{callbacks::FileReader, File};
 // use id3::{self, Frame, Tag};
 use id3::{Frame, Tag, TagLike};
+use std::io::Cursor;
 use std::rc::Rc;
 use yew::prelude::*;
 
@@ -20,7 +21,7 @@ pub enum AppAction {
     MP3Ready(Vec<u8>),
     AddReader(FileReader),
     TitleChanged(String, String),
-    URLCreated(String),
+    // URLCreated(String),
     ClearClicked,
 }
 
@@ -43,8 +44,9 @@ impl Reducible for AppState {
             }
             AppAction::MP3Ready(contents) => {
                 log!("mp3 ready");
-
-                let tag = id3::Tag::read_from(contents.as_slice()).unwrap();
+                log!(format!("{:?}", contents.len()).as_str());
+                let data = Cursor::new(contents.as_slice());
+                let tag = id3::Tag::read_from2(data).unwrap();
                 // log!(format!("{:?}", tag.version()).as_str());
 
                 // for chapter in tag.chapters() {
@@ -84,18 +86,18 @@ impl Reducible for AppState {
                     url: self.url.clone(),
                 })
             }
-            AppAction::URLCreated(url) => {
-                log!("title changed");
-                std::rc::Rc::new(AppState {
-                    mp3: self.mp3.clone(),
-                    tag: self.tag.clone(),
-                    frames: self.frames.clone(),
-                    reader_tasks: self.reader_tasks.clone(),
-                    name: self.name.clone(),
-                    bytes: self.bytes.clone(),
-                    url,
-                })
-            }
+            // AppAction::URLCreated(url) => {
+            //     log!("title changed");
+            //     std::rc::Rc::new(AppState {
+            //         mp3: self.mp3.clone(),
+            //         tag: self.tag.clone(),
+            //         frames: self.frames.clone(),
+            //         reader_tasks: self.reader_tasks.clone(),
+            //         name: self.name.clone(),
+            //         bytes: self.bytes.clone(),
+            //         url,
+            //     })
+            // }
             AppAction::ClearClicked => std::rc::Rc::new(AppState {
                 mp3: None,
                 tag: None,

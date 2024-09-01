@@ -72,16 +72,21 @@ pub fn tag(
     let mut pic = String::new();
     if let Some(tag) = tag {
         for f in tag.frames() {
+            log!(format!("{:?}", f.id()));
             if f.id() == "APIC" {
                 if let Some(p) = f.content().picture() {
-                    // log!(format!("{:?}", p.mime_type));
+                    log!(format!("{:?}", p.mime_type));
                     pic = BASE64.encode(&p.data);
                 }
             } else if f.id() != "CHAP" {
                 log!(format!("xxx {:?}", f));
             }
         }
-        frames = tag.frames().cloned().filter(|f| f.id() != "CHAP").collect();
+        frames = tag
+            .frames()
+            .cloned()
+            .filter(|f| f.id() != "CHAP" && f.id() != "APIC")
+            .collect();
         chaps = tag.chapters().cloned().collect();
     }
 
@@ -95,9 +100,19 @@ pub fn tag(
                         <th>{"value"}</th>
                     </tr>
                 </thead>
+                <Frames frames={frames} on_value_change={on_value_change}/>
             </table>
-            <Frames frames={frames} on_value_change={on_value_change}/>
-            <Chapters chapters={chaps}/>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>{"Chapters"}</th>
+                        <th>{"Name"}</th>
+                        <th>{"Times"}</th>
+                        <th>{"Link"}</th>
+                    </tr>
+                </thead>
+                <Chapters chapters={chaps}/>
+            </table>
             <button class="button is-info" onclick={save_clicked}>{"Save"}</button>
             <button class="button" onclick={clear_clicked}>{" Clear "}</button>
             //<button class="is-info" onclick={save_clicked}>{"Save"}</button>
@@ -112,19 +127,32 @@ struct FramesProps {
 }
 
 #[function_component(Frames)]
-fn tags(FramesProps { frames, on_value_change }: &FramesProps) -> Html {
+fn tags(
+    FramesProps {
+        frames,
+        on_value_change,
+    }: &FramesProps,
+) -> Html {
     frames.iter().map(|f| {
         let name = String::from(f.id());
-        
-        let value = String::from(f.content().text().unwrap_or(""));
-        html! { 
+        let value: String;
+        if name == "USLT" {
+            value = f.content().lyrics().unwrap().text.to_string();
+        } else if name == "COMM" {
+            value = f.content().comment().unwrap().text.to_string();
+        } else if name == "CTOC" {
+            value = f.content().table_of_contents().unwrap().elements.join(", ")
+        } else {
+            value = String::from(f.content().text().unwrap_or(""));
+        }
+
+        html! {
             <tr>
                 <td><span>{ name.clone() }</span></td>
                 <td><input type="text" name={ name } value={ value } onchange={on_value_change}/></td>
             </tr>
         }
      }).collect()
-    
 }
 
 #[derive(Properties, PartialEq)]
@@ -137,19 +165,33 @@ fn chapters(ChaptersProps { chapters }: &ChaptersProps) -> Html {
     let mut c = Vec::new();
     for chapter in chapters {
         let id = chapter.element_id.clone();
+        let start_time = chapter.start_time;
+        let end_time = chapter.end_time;
         let mut name = "";
+        let mut link: Option<String> = None;
         chapter.frames.iter().for_each(|f| {
-            if let Some(text) = f.content().text() {
-                name = text;
+            log!(format!("{:?}", f));
+            if f.id() == "WXXX" {
+                link = Some(f.content().extended_link().unwrap().link.to_string());
+            }
+            if f.id() == "TIT2" {
+                name = f.content().text().unwrap();
             }
         });
         c.push(html! {
-            <div class="row">{ id } { ":" } { name } </div>
+            <tr>
+                <td>{ id }</td>
+                <td>{ name }</td>
+                <td>{ start_time/1000 } {"-"} { end_time/1000 }</td>
+                <td>
+                    if let Some(link) = link {
+                        <a href={link.clone()}>{link}</a>
+                    }
+                </td>
+            </tr>
         });
     }
     html! {
-        <div class="rows">
-            { for c }
-        </div>
+        { for c }
     }
 }
