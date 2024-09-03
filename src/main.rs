@@ -1,7 +1,7 @@
 use yew::prelude::*;
 
 mod components;
-use components::{FileLoader, ID3Tag, Popup};
+use components::{FileLoader, ID3Tag};
 
 mod state;
 use state::{AppAction, AppState};
@@ -131,13 +131,6 @@ fn App() -> Html {
         s.dispatch(AppAction::ClearClicked);
     });
 
-    let show_popup = use_state(|| false);
-
-    let toggle_popup = {
-        let show_popup = show_popup.clone();
-        Callback::from(move |_: MouseEvent| show_popup.set(!*show_popup))
-    };
-
     let mut blob_url: Option<String> = None;
 
     // create a blob of the mp3 file bytes
@@ -159,10 +152,6 @@ fn App() -> Html {
 
     html! {
         <>
-            <button class="button" onclick={toggle_popup.clone()}>{"Show Popup"}</button>
-            if *show_popup {
-                <Popup on_close={toggle_popup.clone()} />
-            }
             if blob_url.is_some() {
                 <audio controls=true src={blob_url.unwrap()}></audio>
                 // <a href={blob_url.clone().unwrap()} download="test.mp3">{"Download"}</a>
