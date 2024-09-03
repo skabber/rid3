@@ -1,6 +1,7 @@
 use gloo::console::log;
 use id3::{frame::Chapter, Tag};
 use web_sys::Event;
+use yew::classes;
 use yew::prelude::*;
 
 use base64::engine::general_purpose::STANDARD as BASE64;
@@ -39,7 +40,7 @@ struct ID3Props {
 fn id3_image(ID3Props { pic }: &ID3Props) -> Html {
     if pic.is_empty() {
         html! {
-            <div class="has-background-light">{" Upload File"}</div>
+            <></>
         }
     } else {
         html! {
@@ -109,6 +110,7 @@ pub fn tag(
                         <th>{"Name"}</th>
                         <th>{"Times"}</th>
                         <th>{"Link"}</th>
+                        <th>{"Art"}</th>
                     </tr>
                 </thead>
                 <Chapters chapters={chaps}/>
@@ -160,6 +162,49 @@ struct ChaptersProps {
     chapters: Vec<Chapter>,
 }
 
+// ChapterArtProps
+#[derive(Properties, PartialEq)]
+struct ChapterArtProps {
+    pic: String, // base64 encoded image
+}
+
+#[function_component(ChapterArt)]
+fn chapter_art(ChapterArtProps { pic }: &ChapterArtProps) -> Html {
+    let modal_classes = use_state(|| vec!["modal"]);
+    let toggle_modal = {
+        let classes = modal_classes.clone();
+        if classes.contains(&"is-active") {
+            Callback::from(move |_: MouseEvent| {
+                classes.set(vec!["modal"]);
+            })
+        } else {
+            Callback::from(move |_: MouseEvent| {
+                classes.set(vec!["modal", "is-active"]);
+            })
+        }
+    };
+    if pic.is_empty() {
+        html! {
+            <div>{"No Art"}</div>
+        }
+    } else {
+        html! {
+            <>
+                <img src={format!("data:image/png;base64,{}", pic.clone())} width="200" onclick={toggle_modal.clone()} />
+                <div class={classes!((*modal_classes).clone())}>
+                <div class="modal-background" onclick={toggle_modal.clone()}></div>
+                  <div class="modal-content">
+                    <p class="image is-4by3">
+                      <ID3Image pic={pic.clone()}/>
+                    </p>
+                  </div>
+                  <button class="modal-close is-large" aria-label="close" onclick={toggle_modal}></button>
+                </div>
+            </>
+        }
+    }
+}
+
 #[function_component(Chapters)]
 fn chapters(ChaptersProps { chapters }: &ChaptersProps) -> Html {
     let mut c = Vec::new();
@@ -169,14 +214,21 @@ fn chapters(ChaptersProps { chapters }: &ChaptersProps) -> Html {
         let end_time = chapter.end_time;
         let mut name = "";
         let mut link: Option<String> = None;
-        chapter.frames.iter().for_each(|f| {
-            log!(format!("{:?}", f));
-            if f.id() == "WXXX" {
-                link = Some(f.content().extended_link().unwrap().link.to_string());
-            }
-            if f.id() == "TIT2" {
+        let mut pic: Option<String> = None;
+        chapter.frames.iter().for_each(|f| match f.id() {
+            "TIT2" => {
                 name = f.content().text().unwrap();
             }
+            "APIC" => {
+                if let Some(p) = f.content().picture() {
+                    log!(format!("APIC.len == {:?}", p.data.len()));
+                    pic = Some(BASE64.encode(&p.data));
+                }
+            }
+            "WXXX" => {
+                link = Some(f.content().extended_link().unwrap().link.to_string());
+            }
+            _ => {}
         });
         c.push(html! {
             <tr>
@@ -186,6 +238,11 @@ fn chapters(ChaptersProps { chapters }: &ChaptersProps) -> Html {
                 <td>
                     if let Some(link) = link {
                         <a href={link.clone()}>{link}</a>
+                    }
+                </td>
+                <td>
+                    if pic.is_some() {
+                        <ChapterArt pic={pic.clone().unwrap()}/>
                     }
                 </td>
             </tr>
