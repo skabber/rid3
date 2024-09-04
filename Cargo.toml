@@ -19,5 +19,6 @@ wasm-bindgen-futures = "0.4.43"
 wasm-cookies = "0.2.1"
 web-sys = { version = "0.3.61", features = ["Element", "BlobPropertyBag"] }
 yew = { version = "0.21.0", features = ["csr"] }
+yew-hooks = "0.3.2"
 yew-router = "0.18.0"
 yewdux = "0.10.0"

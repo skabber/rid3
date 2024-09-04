@@ -1,6 +1,5 @@
 use gloo::console::log;
 use gloo_file::{callbacks::FileReader, File};
-// use id3::{self, Frame, Tag};
 use id3::{Frame, Tag, TagLike};
 use std::io::Cursor;
 use std::rc::Rc;
