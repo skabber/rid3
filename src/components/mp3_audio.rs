@@ -53,6 +53,7 @@ pub fn mp3_audio(MP3AudioProps { url, seek_position }: &MP3AudioProps) -> Html {
                             <p class="card-header-title">{ "MP3 Audio" }</p>
                             </header>
                         <audio ref={node_audio} src={url.clone()} controls=true />
+                        <progress class="progress is-primary" value={audio.time.to_string()} max={audio.duration.to_string()}></progress>
                         <button class="button" onclick={onplay} disabled={*audio.playing}>{ "Play" }</button>
                         <button class="button" onclick={onpause} disabled={!*audio.playing}>{ "Pause" }</button>
                         <div>{*audio.time}</div>
