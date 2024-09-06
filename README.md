@@ -32,8 +32,8 @@ To build and run this project locally, follow these steps:
 
 3. Clone the repository:
    ```
-   git clone https://github.com/your-username/mp3-id3-tag-editor.git
-   cd mp3-id3-tag-editor
+   git clone https://github.com/skabber/rid3.git
+   cd rid3
    ```
 
 4. Build the project:
@@ -67,7 +67,7 @@ To enable GitHub Pages deployment:
 3. Under "Source", select the branch where your built files are pushed (usually `gh-pages`).
 4. Save the changes.
 
-Your project will now be accessible at `https://your-username.github.io/mp3-id3-tag-editor/`.
+Your project will now be accessible at `https://your-username.github.io/rid3/`.
 
 ## Contributing
 
