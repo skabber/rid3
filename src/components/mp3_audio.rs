@@ -2,6 +2,7 @@
 use gloo::console::log;
 
 use web_sys::{Element, HtmlElement};
+use wasm_bindgen::JsCast;
 use yew::prelude::*;
 use yew_hooks::{use_media_with_options, UseMediaOptions};
 //MP3AudioProps
