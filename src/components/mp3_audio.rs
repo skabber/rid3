@@ -51,13 +51,12 @@ pub fn mp3_audio(MP3AudioProps { url, seek_position }: &MP3AudioProps) -> Html {
         Callback::from(move |e: MouseEvent| {
             let target: Element = e.target_unchecked_into();
             if let Ok(html_element) = target.dyn_into::<Element>() {
-                if let Some(rect) = html_element.get_bounding_client_rect() {
-                    let click_position = e.client_x() as f64 - rect.left();
-                    let progress_width = rect.width();
-                    let seek_percentage = click_position / progress_width;
-                    let seek_time = seek_percentage * *audio.duration;
-                    audio.seek(seek_time);
-                }
+                let rect = html_element.get_bounding_client_rect();
+                let click_position = e.client_x() as f64 - rect.left();
+                let progress_width = rect.width();
+                let seek_percentage = click_position / progress_width;
+                let seek_time = seek_percentage * *audio.duration;
+                audio.seek(seek_time);
             }
         })
     };
