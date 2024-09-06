@@ -44,6 +44,19 @@ pub fn mp3_audio(MP3AudioProps { url, seek_position }: &MP3AudioProps) -> Html {
         })
     };
 
+    let onseek = {
+        let audio = audio.clone();
+        Callback::from(move |e: MouseEvent| {
+            let target: web_sys::HtmlElement = e.target_unchecked_into();
+            let rect = target.get_bounding_client_rect();
+            let click_position = e.client_x() as f64 - rect.left();
+            let progress_width = rect.width();
+            let seek_percentage = click_position / progress_width;
+            let seek_time = seek_percentage * audio.duration;
+            audio.seek(seek_time);
+        })
+    };
+
     html! {
         <>
             <div class="container">
@@ -53,7 +66,13 @@ pub fn mp3_audio(MP3AudioProps { url, seek_position }: &MP3AudioProps) -> Html {
                             <p class="card-header-title">{ "MP3 Audio" }</p>
                             </header>
                         <audio ref={node_audio} src={url.clone()} controls=true />
-                        <progress class="progress is-primary" value={audio.time.to_string()} max={audio.duration.to_string()}></progress>
+                        <progress 
+                            class="progress is-primary" 
+                            value={audio.time.to_string()} 
+                            max={audio.duration.to_string()}
+                            onclick={onseek}
+                            style="cursor: pointer;"
+                        ></progress>
                         <button class="button" onclick={onplay} disabled={*audio.playing}>{ "Play" }</button>
                         <button class="button" onclick={onpause} disabled={!*audio.playing}>{ "Pause" }</button>
                         <div>{*audio.time}</div>
