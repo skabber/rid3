@@ -14,6 +14,7 @@ pub struct ID3TagProps {
     pub save_clicked: Callback<MouseEvent>,
     pub clear_clicked: Callback<MouseEvent>,
     pub on_seek_position_change: Callback<f64>,
+    pub add_new_tag: Callback<MouseEvent>,
 }
 
 #[function_component(ID3Tag)]
@@ -24,6 +25,7 @@ pub fn tag(
         save_clicked,
         clear_clicked,
         on_seek_position_change,
+        add_new_tag,
     }: &ID3TagProps,
 ) -> Html {
     let mut chaps = Vec::new();
@@ -62,6 +64,15 @@ pub fn tag(
                             <ChapterArt pic={pic.clone()}/>
                         </div>
                         <div class="column">
+                            <div class="is-flex is-justify-content-space-between mb-2">
+                                <h4 class="title is-4">{"ID3 Tags"}</h4>
+                                <button class="button is-primary is-small" onclick={add_new_tag}>
+                                    <span class="icon">
+                                        <i class="fas fa-plus"></i>
+                                    </span>
+                                    <span>{"Add Tag"}</span>
+                                </button>
+                            </div>
                             <table class="table">
                                 <thead>
                                     <tr>

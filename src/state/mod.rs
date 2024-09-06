@@ -23,6 +23,7 @@ pub enum AppAction {
     // URLCreated(String),
     ClearClicked,
     SetFileName(String),
+    AddNewTag,
 }
 
 impl Reducible for AppState {
@@ -116,6 +117,19 @@ impl Reducible for AppState {
                 bytes: self.bytes.clone(),
                 url: self.url.clone(),
             }),
+            AppAction::AddNewTag => {
+                let mut new_tag = self.tag.clone().unwrap_or_else(|| Tag::new());
+                new_tag.add_frame(Frame::text("TXXX", "New Tag"));
+                std::rc::Rc::new(AppState {
+                    mp3: self.mp3.clone(),
+                    tag: Some(new_tag),
+                    frames: self.frames.clone(),
+                    reader_tasks: self.reader_tasks.clone(),
+                    name: self.name.clone(),
+                    bytes: self.bytes.clone(),
+                    url: self.url.clone(),
+                })
+            },
         }
     }
 }

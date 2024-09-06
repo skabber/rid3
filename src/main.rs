@@ -187,7 +187,19 @@ fn App() -> Html {
                 />
                 // <a href={blob_url.clone().unwrap()} download="test.mp3">{"Download"}</a>
 
-                <ID3Tag tag={state.tag.clone()} on_value_change={on_title_change} save_clicked={save_clicked} clear_clicked={clear_clicked} on_seek_position_change={on_seek}/>
+                <ID3Tag 
+                    tag={state.tag.clone()} 
+                    on_value_change={on_title_change} 
+                    save_clicked={save_clicked} 
+                    clear_clicked={clear_clicked} 
+                    on_seek_position_change={on_seek}
+                    add_new_tag={
+                        let state = state.clone();
+                        Callback::from(move |_| {
+                            state.dispatch(AppAction::AddNewTag);
+                        })
+                    }
+                />
                 <div>{ state.url.clone() }</div>
             }
         </>
