@@ -79,7 +79,6 @@ pub fn tag(
                                         <th>{"Chapters"}</th>
                                         <th>{"Name"}</th>
                                         <th>{"Times"}</th>
-                                        <th>{"Link"}</th>
                                         <th>{"Art"}</th>
                                         <th>{"Controls"}</th>
                                     </tr>
@@ -215,13 +214,14 @@ fn chapters(
         c.push(html! {
             <tr>
                 <td>{ id }</td>
-                <td>{ name }</td>
-                <td>{ start_time/1000 } {"-"} { end_time/1000 }</td>
                 <td>
-                    if let Some(link) = link {
-                        <a href={link.clone()}>{link}</a>
+                    if let Some(link) = link.clone() {
+                        <a href={link}>{name}</a>
+                    } else {
+                        { name }
                     }
                 </td>
+                <td>{ start_time/1000 } {"-"} { end_time/1000 }</td>
                 <td>
                     if pic.is_some() {
                         <ChapterArt pic={pic.clone().unwrap()}/>
