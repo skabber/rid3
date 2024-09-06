@@ -1,4 +1,4 @@
-name: Build GH Pages
+name: Build and Deploy to GitHub Pages
 on:
   push:
     branches:
@@ -7,6 +7,7 @@ on:
     branches:
       - "*"
   workflow_dispatch:
+
 jobs:
   build:
     permissions:
@@ -15,21 +16,23 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      - name: Rust Toolchain
+      - name: Setup Rust Toolchain
         uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           target: wasm32-unknown-unknown
-      - uses: jetli/trunk-action@v0.5.0
+      - name: Install Trunk
+        uses: jetli/trunk-action@v0.5.0
         with:
           version: "latest"
       - name: Build
         run: trunk build --release --public-url=/${{ github.event.repository.name }}
       - name: Setup Pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v4
       - name: Upload Artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: "./dist"
+
   deploy:
     if: github.event_name == 'push'
     permissions:
@@ -41,6 +44,6 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     steps:
-      - name: Deploy to GH Pages
+      - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4

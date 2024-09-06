@@ -25,9 +25,9 @@ To build and run this project locally, follow these steps:
 
 1. Ensure you have Rust and Cargo installed on your system. If not, install them from [https://www.rust-lang.org/tools/install](https://www.rust-lang.org/tools/install).
 
-2. Install `wasm-pack` by running:
+2. Install `trunk` by running:
    ```
-   cargo install wasm-pack
+   cargo install trunk
    ```
 
 3. Clone the repository:
@@ -38,15 +38,15 @@ To build and run this project locally, follow these steps:
 
 4. Build the project:
    ```
-   wasm-pack build --target web
+   trunk build --release
    ```
 
-5. Serve the project locally. You can use any static file server. For example, with Python:
+5. To run the project locally for development, use:
    ```
-   python -m http.server 8000
+   trunk serve
    ```
 
-6. Open your web browser and navigate to `http://localhost:8000` to use the application.
+6. Open your web browser and navigate to `http://localhost:8080` to use the application.
 
 ## GitHub Actions and Deployment
 
@@ -55,9 +55,9 @@ This project uses GitHub Actions for continuous integration and deployment to Gi
 The workflow does the following:
 
 1. Triggers on pushes to the `main` branch.
-2. Sets up the Rust toolchain.
-3. Installs `wasm-pack`.
-4. Builds the project using `wasm-pack build --target web`.
+2. Sets up the Rust toolchain with the `wasm32-unknown-unknown` target.
+3. Installs `trunk`.
+4. Builds the project using `trunk build --release`.
 5. Deploys the built files to GitHub Pages.
 
 To enable GitHub Pages deployment:
