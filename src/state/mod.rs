@@ -16,12 +16,27 @@ pub struct AppState {
     pub url: String,
 }
 
+impl AppState {
+    pub fn new() -> Self {
+        Self {
+            mp3: None,
+            tag: None,
+            frames: Vec::new(),
+            reader_tasks: None,
+            name: String::new(),
+            bytes: Vec::new(),
+            url: String::new(),
+        }
+    }
+}
+
 pub enum AppAction {
     MP3Ready(Vec<u8>),
     AddReader(FileReader),
     TitleChanged(String, String),
     // URLCreated(String),
     ClearClicked,
+    SetFileName(String),
 }
 
 impl Reducible for AppState {
@@ -105,6 +120,15 @@ impl Reducible for AppState {
                 name: String::new(),
                 bytes: Vec::new(),
                 url: String::new(),
+            }),
+            AppAction::SetFileName(name) => std::rc::Rc::new(AppState {
+                mp3: self.mp3.clone(),
+                tag: self.tag.clone(),
+                frames: self.frames.clone(),
+                reader_tasks: self.reader_tasks.clone(),
+                name,
+                bytes: self.bytes.clone(),
+                url: self.url.clone(),
             }),
         }
     }
