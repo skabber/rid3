@@ -10,10 +10,11 @@ use yew_hooks::{use_media_with_options, UseMediaOptions};
 pub struct MP3AudioProps {
     pub url: String,
     pub seek_position: UseStateHandle<Option<f64>>,
+    pub file_name: String,
 }
 
 #[function_component(MP3Audio)]
-pub fn mp3_audio(MP3AudioProps { url, seek_position }: &MP3AudioProps) -> Html {
+pub fn mp3_audio(MP3AudioProps { url, seek_position, file_name }: &MP3AudioProps) -> Html {
     let options = UseMediaOptions {
         ontimeupdate: None,
         ..Default::default()
@@ -67,8 +68,8 @@ pub fn mp3_audio(MP3AudioProps { url, seek_position }: &MP3AudioProps) -> Html {
                 <div class="card">
                     <div class="card-content">
                         <header class="card-header">
-                            <p class="card-header-title">{ "MP3 Audio" }</p>
-                            </header>
+                            <p class="card-header-title">{ file_name }</p>
+                        </header>
                         <audio ref={node_audio} src={url.clone()} controls=true />
                         <progress
                             class="progress is-primary"
