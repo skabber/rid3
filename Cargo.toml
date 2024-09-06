@@ -15,6 +15,10 @@ js-sys = "0.3.61"
 serde = "1.0.152"
 wasm-bindgen-futures = "0.4.43"
 wasm-cookies = "0.2.1"
-web-sys = { version = "0.3.61", features = ["Element", "BlobPropertyBag"] }
+web-sys = { version = "0.3.61", features = [
+  "DomRect",
+  "Element",
+  "BlobPropertyBag",
+] }
 yew = { version = "0.21.0", features = ["csr"] }
 yew-hooks = "0.3.2"

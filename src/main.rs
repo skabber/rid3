@@ -5,7 +5,6 @@ use components::{FileLoader, ID3Tag, MP3Audio};
 
 mod state;
 use state::{AppAction, AppState};
-use std::path::Path;
 
 use gloo::console::log;
 use gloo_file::File;
@@ -181,8 +180,8 @@ fn App() -> Html {
             </div>
 
             if blob_url.is_some() {
-                <MP3Audio 
-                    url={blob_url.unwrap()} 
+                <MP3Audio
+                    url={blob_url.unwrap()}
                     seek_position={seek_position}
                     file_name={state.name.clone()}
                 />
