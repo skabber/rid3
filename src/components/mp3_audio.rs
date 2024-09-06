@@ -80,7 +80,7 @@ pub fn mp3_audio(MP3AudioProps { url, seek_position, file_name }: &MP3AudioProps
                         ></progress>
                         <button class="button" onclick={onplay} disabled={*audio.playing}>{ "Play" }</button>
                         <button class="button" onclick={onpause} disabled={!*audio.playing}>{ "Pause" }</button>
-                        <div>{*audio.time}</div>
+                        <div>{format!("{:02}:{:02}", (*audio.time / 60.0) as i32, (*audio.time % 60.0) as i32)}</div>
                     </div>
                 </div>
             </div>
