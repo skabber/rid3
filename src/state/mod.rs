@@ -22,6 +22,7 @@ pub enum AppAction {
     TitleChanged(String, String),
     // URLCreated(String),
     ClearClicked,
+    SetFileName(String),
 }
 
 impl Reducible for AppState {
@@ -105,6 +106,15 @@ impl Reducible for AppState {
                 name: String::new(),
                 bytes: Vec::new(),
                 url: String::new(),
+            }),
+            AppAction::SetFileName(name) => std::rc::Rc::new(AppState {
+                mp3: self.mp3.clone(),
+                tag: self.tag.clone(),
+                frames: self.frames.clone(),
+                reader_tasks: self.reader_tasks.clone(),
+                name,
+                bytes: self.bytes.clone(),
+                url: self.url.clone(),
             }),
         }
     }

@@ -57,10 +57,11 @@ fn App() -> Html {
                 {
                     let state = state.clone();
                     let sd = state.clone();
+                    let file_name = sf.name();
                     let task = gloo_file::callbacks::read_as_bytes(&sf, move |bytes| {
                         let contents = bytes.unwrap();
-
                         state.dispatch(AppAction::MP3Ready(contents));
+                        state.dispatch(AppAction::SetFileName(file_name.clone()));
                     });
 
                     sd.dispatch(AppAction::AddReader(task));
@@ -179,7 +180,11 @@ fn App() -> Html {
             </div>
 
             if blob_url.is_some() {
-                <MP3Audio url={blob_url.unwrap()} seek_position={seek_position}/>
+                <MP3Audio
+                    url={blob_url.unwrap()}
+                    seek_position={seek_position}
+                    file_name={state.name.clone()}
+                />
                 // <a href={blob_url.clone().unwrap()} download="test.mp3">{"Download"}</a>
 
                 <ID3Tag tag={state.tag.clone()} on_value_change={on_title_change} save_clicked={save_clicked} clear_clicked={clear_clicked} on_seek_position_change={on_seek}/>
