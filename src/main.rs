@@ -77,55 +77,31 @@ fn App() -> Html {
             let tag = state.tag.clone().unwrap();
             log!(format!("1 {:?}", tag));
 
-            let mut b = state.bytes.clone();
+            let b = state.bytes.clone();
             log!(format!("2 {:?}", b.len()));
 
-            let curs = Cursor::new(&mut b);
+            let mut curs = Cursor::new(b);
 
-            // find og tag
-            // let location = id3::stream::tag::locate_id3v2(curs);
-            // log!(format!("3 {:?}", location));
-
-            tag.write_to(curs, Version::Id3v23).unwrap();
-
-            // tag.write_to(&mut b, Version::Id3v23).unwrap();
-            let bytes = b.as_slice();
-            log!(format!("3 {:?}", bytes.len()));
-
-            let uint8arr =
-                js_sys::Uint8Array::new(&unsafe { js_sys::Uint8Array::view(bytes) }.into());
-            log!(format!("4 {:?}", uint8arr.length()));
+            // tag.write_to(curs, Version::Id3v23).unwrap();
+            match tag.write_to_file(&mut curs, Version::Id3v24) {
+                Ok(_) => log!("Successfully wrote tag to file"),
+                Err(e) => log!(format!("Error writing tag to file: {:?}", e)),
+            };
+            let uint8arr = js_sys::Uint8Array::new(
+                &unsafe { js_sys::Uint8Array::view(curs.get_ref()) }.into(),
+            );
             let array = js_sys::Array::new();
             array.push(&uint8arr.buffer());
-            log!(format!("5 {:?}", array));
 
             let bpb = web_sys::BlobPropertyBag::new();
-            bpb.set_type("audio/mpeg3;audio/x-mpeg-3;video/mpeg;video/x-mpeg;text/xml");
+            bpb.set_type("audio/mpeg");
 
             let blob = web_sys::Blob::new_with_u8_array_sequence_and_options(&array, &bpb).unwrap();
-            let download_url = web_sys::Url::create_object_url_with_blob(&blob).unwrap(); // Zero bytes
+            let blob_url = web_sys::Url::create_object_url_with_blob(&blob).unwrap();
 
-            log!(format!("{:?}", download_url));
-            // change_location(download_url.as_str());
+            log!(format!("Blob URL: {:?}", blob_url));
 
-            let window: web_sys::Window = web_sys::window().expect("window not available");
-            let element = window.document().unwrap().create_element("a").unwrap();
-            element
-                .set_attribute("href", download_url.as_str())
-                .unwrap();
-            element.set_attribute("download", "test.mp3").unwrap();
-            window
-                .document()
-                .unwrap()
-                .body()
-                .unwrap()
-                .append_child(&element)
-                .unwrap();
-            // element.;
-            // window
-            //     .location()
-            //     .set_href(download_url.as_str())
-            //     .expect("location change failed");
+            state.dispatch(AppAction::URLCreated(blob_url));
         })
     };
 
@@ -163,6 +139,13 @@ fn App() -> Html {
         })
     };
 
+    let add_new_tag = {
+        let state = state.clone();
+        Callback::from(move |_: MouseEvent| {
+            state.dispatch(AppAction::AddNewTag);
+        })
+    };
+
     html! {
         <>
             <div class="container">
@@ -187,19 +170,7 @@ fn App() -> Html {
                 />
                 // <a href={blob_url.clone().unwrap()} download="test.mp3">{"Download"}</a>
 
-                <ID3Tag 
-                    tag={state.tag.clone()} 
-                    on_value_change={on_title_change} 
-                    save_clicked={save_clicked} 
-                    clear_clicked={clear_clicked} 
-                    on_seek_position_change={on_seek}
-                    add_new_tag={
-                        let state = state.clone();
-                        Callback::from(move |_| {
-                            state.dispatch(AppAction::AddNewTag);
-                        })
-                    }
-                />
+                <ID3Tag tag={state.tag.clone()} on_value_change={on_title_change} save_clicked={save_clicked} clear_clicked={clear_clicked} on_seek_position_change={on_seek} add_new_tag={add_new_tag}/>
                 <div>{ state.url.clone() }</div>
             }
         </>

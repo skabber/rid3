@@ -3,6 +3,7 @@ use gloo_file::{callbacks::FileReader, File};
 use id3::{Frame, Tag, TagLike};
 use std::io::Cursor;
 use std::rc::Rc;
+use web_sys::wasm_bindgen::JsCast;
 use yew::prelude::*;
 
 #[derive(Clone, Debug)]
@@ -20,7 +21,7 @@ pub enum AppAction {
     MP3Ready(Vec<u8>),
     AddReader(FileReader),
     TitleChanged(String, String),
-    // URLCreated(String),
+    URLCreated(String),
     ClearClicked,
     SetFileName(String),
     AddNewTag,
@@ -87,18 +88,19 @@ impl Reducible for AppState {
                     url: self.url.clone(),
                 })
             }
-            // AppAction::URLCreated(url) => {
-            //     log!("title changed");
-            //     std::rc::Rc::new(AppState {
-            //         mp3: self.mp3.clone(),
-            //         tag: self.tag.clone(),
-            //         frames: self.frames.clone(),
-            //         reader_tasks: self.reader_tasks.clone(),
-            //         name: self.name.clone(),
-            //         bytes: self.bytes.clone(),
-            //         url,
-            //     })
-            // }
+            AppAction::URLCreated(url) => {
+                log!("title changed");
+                force_download(url.as_str(), "rid3.mp3");
+                std::rc::Rc::new(AppState {
+                    mp3: self.mp3.clone(),
+                    tag: self.tag.clone(),
+                    frames: self.frames.clone(),
+                    reader_tasks: self.reader_tasks.clone(),
+                    name: self.name.clone(),
+                    bytes: self.bytes.clone(),
+                    url,
+                })
+            }
             AppAction::ClearClicked => std::rc::Rc::new(AppState {
                 mp3: None,
                 tag: None,
@@ -129,7 +131,51 @@ impl Reducible for AppState {
                     bytes: self.bytes.clone(),
                     url: self.url.clone(),
                 })
-            },
+            }
         }
     }
+}
+
+fn force_download(blob_url: &str, filename: &str) {
+    // Get the window object
+    let window = web_sys::window().expect("no global `window` exists");
+    let document = window.document().expect("should have a document on window");
+
+    // Create a temporary <a> element
+    let a = document
+        .create_element("a")
+        .expect("failed to create a element");
+    let a: web_sys::HtmlElement = a.dyn_into::<web_sys::HtmlElement>().unwrap();
+
+    // Set the href to the blob URL
+    a.set_attribute("href", blob_url)
+        .expect("failed to set href");
+
+    // Set the download attribute with the desired filename
+    a.set_attribute("download", filename)
+        .expect("failed to set download attribute");
+
+    // Make the link invisible
+    // a.style()
+    //     .set_property("display", "none")
+    //     .expect("failed to set style");
+    a.set_attribute("style", "display: none")
+        .expect("failed to set style attribute");
+
+    // Add the link to the document body
+    document
+        .body()
+        .expect("document should have a body")
+        .append_child(&a)
+        .expect("failed to append child");
+
+    // Programmatically click the link
+    a.click();
+
+    // Remove the link from the document
+    document
+        .body()
+        .expect("document should have a body")
+        .remove_child(&a)
+        .expect("failed to remove child");
 }
