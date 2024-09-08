@@ -32,34 +32,18 @@ impl Reducible for AppState {
 
     fn reduce(self: std::rc::Rc<Self>, action: AppAction) -> std::rc::Rc<Self> {
         match action {
-            AppAction::AddReader(reader) => {
-                log!("add reader");
-                std::rc::Rc::new(AppState {
-                    mp3: self.mp3.clone(),
-                    tag: self.tag.clone(),
-                    frames: self.frames.clone(),
-                    reader_tasks: Some(Rc::new(reader)),
-                    name: self.name.clone(),
-                    bytes: self.bytes.clone(),
-                    url: self.url.clone(),
-                })
-            }
+            AppAction::AddReader(reader) => std::rc::Rc::new(AppState {
+                mp3: self.mp3.clone(),
+                tag: self.tag.clone(),
+                frames: self.frames.clone(),
+                reader_tasks: Some(Rc::new(reader)),
+                name: self.name.clone(),
+                bytes: self.bytes.clone(),
+                url: self.url.clone(),
+            }),
             AppAction::MP3Ready(contents) => {
-                log!("mp3 ready");
-                log!(format!("{:?}", contents.len()).as_str());
                 let data = Cursor::new(contents.as_slice());
                 let tag = id3::Tag::read_from2(data).unwrap();
-                // log!(format!("{:?}", tag.version()).as_str());
-
-                // for chapter in tag.chapters() {
-                //     log!(format!("{:?}", chapter.element_id).as_str());
-                //     for frame in &chapter.frames {
-                //         let c = frame.content();
-                //         if let Some(text) = c.text() {
-                //             log!(text);
-                //         }
-                //     }
-                // }
 
                 std::rc::Rc::new(AppState {
                     mp3: self.mp3.clone(),
@@ -77,7 +61,7 @@ impl Reducible for AppState {
                 // t.set_album(title.clone());
                 t.set_text(att.as_str(), title.clone());
                 // t.add_frame(Frame::with_content("TALB", Content::Text(title.clone())));
-                log!(format!("{:?}", t).as_str());
+                // log!(format!("{:?}", t).as_str());
                 std::rc::Rc::new(AppState {
                     mp3: self.mp3.clone(),
                     tag: Some(t),
@@ -89,7 +73,7 @@ impl Reducible for AppState {
                 })
             }
             AppAction::URLCreated(url) => {
-                log!("title changed");
+                log!("URL Created");
                 force_download(url.as_str(), "rid3.mp3");
                 std::rc::Rc::new(AppState {
                     mp3: self.mp3.clone(),
@@ -120,6 +104,7 @@ impl Reducible for AppState {
                 url: self.url.clone(),
             }),
             AppAction::AddNewTag => {
+                log!("add new tag");
                 let mut new_tag = self.tag.clone().unwrap_or_else(|| Tag::new());
                 new_tag.add_frame(Frame::text("TXXX", "New Tag"));
                 std::rc::Rc::new(AppState {

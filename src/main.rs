@@ -27,6 +27,7 @@ fn App() -> Html {
     let seek_position = use_state(|| None);
 
     let on_title_change = {
+        log!("on_title_change");
         let state = state.clone();
         Callback::from(move |e: Event| {
             let state = state.clone();
@@ -83,7 +84,7 @@ fn App() -> Html {
             let mut curs = Cursor::new(b);
 
             // tag.write_to(curs, Version::Id3v23).unwrap();
-            match tag.write_to_file(&mut curs, Version::Id3v24) {
+            match tag.write_to_file(&mut curs, Version::Id3v23) {
                 Ok(_) => log!("Successfully wrote tag to file"),
                 Err(e) => log!(format!("Error writing tag to file: {:?}", e)),
             };

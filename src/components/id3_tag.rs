@@ -33,14 +33,12 @@ pub fn tag(
     let mut pic = String::new();
     if let Some(tag) = tag {
         for f in tag.frames() {
-            log!(format!("{:?}", f.id()));
             if f.id() == "APIC" {
                 if let Some(p) = f.content().picture() {
-                    log!(format!("{:?}", p.mime_type));
                     pic = BASE64.encode(&p.data);
                 }
             } else if f.id() != "CHAP" {
-                log!(format!("xxx {:?}", f));
+                // log!(format!("xxx {:?}", f));
             }
         }
         frames = tag
@@ -212,7 +210,6 @@ fn chapters(
             }
             "APIC" => {
                 if let Some(p) = f.content().picture() {
-                    log!(format!("APIC.len == {:?}", p.data.len()));
                     pic = Some(BASE64.encode(&p.data));
                 }
             }
@@ -232,7 +229,10 @@ fn chapters(
                         { name }
                     }
                 </td>
-                <td>{ start_time/1000 } {"-"} { end_time/1000 }</td>
+                <td>
+                // { start_time/1000 } {"-"} { end_time/1000 }
+                {format!("{:02}:{:02}", ((start_time/1000) as f32 / 60.0) as i32, ((start_time/1000) as f32 % 60.0) as i32)}
+                </td>
                 <td>
                     if pic.is_some() {
                         <ChapterArt pic={pic.clone().unwrap()}/>
