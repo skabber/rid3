@@ -171,7 +171,7 @@ fn App() -> Html {
                 />
                 // <a href={blob_url.clone().unwrap()} download="test.mp3">{"Download"}</a>
 
-                <ID3Tag tag={state.tag.clone()} on_value_change={on_title_change} save_clicked={save_clicked} clear_clicked={clear_clicked} on_seek_position_change={on_seek} add_new_tag={add_new_tag}/>
+                <ID3Tag add_new_tag={add_new_tag} tag={state.tag.clone()} on_value_change={on_title_change} save_clicked={save_clicked} clear_clicked={clear_clicked} on_seek_position_change={on_seek} />
                 <div>{ state.url.clone() }</div>
             }
         </>

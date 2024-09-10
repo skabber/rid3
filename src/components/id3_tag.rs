@@ -1,4 +1,3 @@
-use gloo::console::log;
 use id3::{frame::Chapter, Tag};
 use web_sys::Event;
 use yew::classes;
@@ -200,7 +199,7 @@ fn chapters(
     for chapter in chapters {
         let id = chapter.element_id.clone();
         let start_time = chapter.start_time;
-        let end_time = chapter.end_time;
+        let _end_time = chapter.end_time;
         let mut name = "";
         let mut link: Option<String> = None;
         let mut pic: Option<String> = None;
