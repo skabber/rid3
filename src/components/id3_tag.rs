@@ -1,31 +1,25 @@
 use gloo::console::log;
+use id3::TagLike;
 use id3::{frame::Chapter, Tag};
 use web_sys::Event;
+use web_sys::HtmlInputElement;
 use yew::classes;
 use yew::prelude::*;
+use yewdux::prelude::*;
 
 use base64::engine::general_purpose::STANDARD as BASE64;
 use base64::engine::Engine as _;
 
+use crate::state::AppState;
+
 #[derive(Properties, PartialEq)]
 pub struct ID3TagProps {
     pub tag: Option<Tag>,
-    pub on_value_change: Callback<Event>,
-    pub save_clicked: Callback<MouseEvent>,
-    pub clear_clicked: Callback<MouseEvent>,
-    pub on_seek_position_change: Callback<f64>,
 }
 
 #[function_component(ID3Tag)]
-pub fn tag(
-    ID3TagProps {
-        tag,
-        on_value_change,
-        save_clicked,
-        clear_clicked,
-        on_seek_position_change,
-    }: &ID3TagProps,
-) -> Html {
+pub fn tag(ID3TagProps { tag }: &ID3TagProps) -> Html {
+    let (_, dispatch) = use_store::<AppState>();
     let mut chaps = Vec::new();
     let mut frames = Vec::new();
     let mut pic = String::new();
@@ -49,6 +43,32 @@ pub fn tag(
         chaps = tag.chapters().cloned().collect();
     }
 
+    // TODO: re-write this to edit any type of tag.
+    let on_value_change = {
+        let dispatch = dispatch.clone();
+        dispatch.reduce_callback_with(|state, event: Event| {
+            let input: HtmlInputElement = event.target_unchecked_into();
+            let title = input.value();
+            let att = input.get_attribute("name").unwrap();
+            let mut otag = state.tag.clone().unwrap();
+            {
+                let tag = state.tag.clone().unwrap();
+                let frame = tag.frames().cloned().filter(|f| f.id() == att);
+                for found_frame in frame {
+                    log!(format!("ff: {:?}", found_frame.id()));
+                    otag.set_text_values(att.clone(), vec![title.clone()]);
+                }
+            }
+
+            std::rc::Rc::new(AppState {
+                tag: Some(otag.clone()),
+                url: state.url.clone(),
+                name: state.name.clone(),
+                bytes: state.bytes.clone(),
+                seek_position: state.seek_position.clone(),
+            })
+        })
+    };
     html! {
         <div class="container">
             <div class="card">
@@ -83,11 +103,8 @@ pub fn tag(
                                         <th>{"Controls"}</th>
                                     </tr>
                                 </thead>
-                                <Chapters chapters={chaps} on_seek_position_change={on_seek_position_change}/>
+                                <Chapters chapters={chaps} />
                             </table>
-                            <button class="button is-info" onclick={save_clicked}>{"Save"}</button>
-                            <button class="button" onclick={clear_clicked}>{" Clear "}</button>
-                            //<button class="is-info" onclick={save_clicked}>{"Save"}</button>
                         </div>
                     </div>
                 </div>
@@ -177,16 +194,12 @@ fn chapter_art(ChapterArtProps { pic }: &ChapterArtProps) -> Html {
 #[derive(Properties, PartialEq)]
 struct ChaptersProps {
     chapters: Vec<Chapter>,
-    pub on_seek_position_change: Callback<f64>,
 }
 
 #[function_component(Chapters)]
-fn chapters(
-    ChaptersProps {
-        chapters,
-        on_seek_position_change,
-    }: &ChaptersProps,
-) -> Html {
+fn chapters(ChaptersProps { chapters }: &ChaptersProps) -> Html {
+    let (_, dispatch) = use_store::<AppState>();
+
     let mut c = Vec::new();
     for chapter in chapters {
         let id = chapter.element_id.clone();
@@ -211,12 +224,28 @@ fn chapters(
             _ => {}
         });
 
+        let on_seek = {
+            let dispatch = dispatch.clone();
+            Callback::from(move |pos: f64| {
+                log!(format!("Seek to {:?}", pos));
+                dispatch.reduce(move |state| {
+                    std::rc::Rc::new(AppState {
+                        tag: state.tag.clone(),
+                        bytes: state.bytes.clone(),
+                        name: state.name.clone(),
+                        url: state.url.clone(),
+                        seek_position: pos,
+                    })
+                });
+            })
+        };
+
         c.push(html! {
             <tr>
                 <td>{ id }</td>
                 <td>
                     if let Some(link) = link.clone() {
-                        <a href={link}>{name}</a>
+                        <a href={link} targete={"_blank"}>{name}</a>
                     } else {
                         { name }
                     }
@@ -228,7 +257,7 @@ fn chapters(
                     }
                 </td>
                 <td>
-                    <button class="button is-info" onclick={on_seek_position_change.reform(move |_| (start_time/1000) as f64)}>{">"}</button>
+                    <button class="button is-info" onclick={on_seek.reform(move |_| (start_time/1000) as f64)}>{">"}</button>
                 </td>
             </tr>
         });
