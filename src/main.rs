@@ -9,7 +9,7 @@ use state::AppState;
 use gloo::console::log;
 use id3::Version;
 use std::io::Cursor;
-
+#[allow(non_snake_case)]
 #[function_component]
 fn App() -> Html {
     let (state, dispatch) = use_store::<AppState>();

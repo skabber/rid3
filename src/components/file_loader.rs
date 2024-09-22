@@ -28,27 +28,9 @@ pub fn file_loader() -> Html {
                 selected_files.extend(files);
             }
 
-            for sf in selected_files {
-                let file_name = sf.name();
+            for selected_file in selected_files {
                 let reader_clone = reader.clone();
-                let dispatch_clone = dispatch.clone();
-                let task = gloo_file::callbacks::read_as_bytes(&sf, move |bytes| {
-                    if let Ok(contents) = bytes {
-                        log!("contents length: ", contents.len());
-                        let data = Cursor::new(contents.as_slice());
-                        if let Ok(tag) = id3::Tag::read_from2(data) {
-                            dispatch_clone.reduce(move |state| {
-                                std::rc::Rc::new(AppState {
-                                    tag: Some(tag),
-                                    bytes: contents,
-                                    name: file_name.clone(),
-                                    url: state.url.clone(),
-                                    seek_position: state.seek_position.clone(),
-                                })
-                            });
-                        }
-                    }
-                });
+                let task = read_file(selected_file, dispatch.clone());
                 reader_clone.set(Some(task));
             }
         })
@@ -69,4 +51,25 @@ pub fn file_loader() -> Html {
             </label>
           </div>
     )
+}
+
+fn read_file(file: File, dispatch: Dispatch<AppState>) -> gloo_file::callbacks::FileReader {
+    let file_name = file.name();
+    gloo_file::callbacks::read_as_bytes(&file, move |bytes| {
+        if let Ok(contents) = bytes {
+            log!("contents length: ", contents.len());
+            let data = Cursor::new(contents.as_slice());
+            if let Ok(tag) = id3::Tag::read_from2(data) {
+                dispatch.reduce(move |state| {
+                    std::rc::Rc::new(AppState {
+                        tag: Some(tag),
+                        bytes: contents,
+                        name: file_name.clone(),
+                        url: state.url.clone(),
+                        seek_position: state.seek_position.clone(),
+                    })
+                });
+            }
+        }
+    })
 }

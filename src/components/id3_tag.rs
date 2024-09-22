@@ -10,6 +10,8 @@ use yewdux::prelude::*;
 use base64::engine::general_purpose::STANDARD as BASE64;
 use base64::engine::Engine as _;
 
+use crate::components::bulma::Modal;
+use crate::components::id3_edit::SelectForm;
 use crate::state::AppState;
 
 #[derive(Properties, PartialEq)]
@@ -69,6 +71,7 @@ pub fn tag(ID3TagProps { tag }: &ID3TagProps) -> Html {
             })
         })
     };
+
     html! {
         <div class="container">
             <div class="card">
@@ -82,6 +85,9 @@ pub fn tag(ID3TagProps { tag }: &ID3TagProps) -> Html {
                             <ChapterArt pic={pic.clone()}/>
                         </div>
                         <div class="column">
+                          <Modal title={"Add Tag"}>
+                            <SelectForm />
+                          </Modal>
                             <table class="table">
                                 <thead>
                                     <tr>
