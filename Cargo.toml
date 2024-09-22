@@ -12,13 +12,15 @@ gloo-file = "0.3.x"
 gloo-net = { version = "0.6.0" }
 id3 = "1.14.0"
 js-sys = "0.3.61"
-serde = "1.0.152"
+serde = "1.0.210"
 wasm-bindgen-futures = "0.4.43"
 wasm-cookies = "0.2.1"
-web-sys = { version = "0.3.61", features = [
+web-sys = { version = "0.3.70", features = [
   "DomRect",
   "Element",
+  "HtmlSelectElement",
   "BlobPropertyBag",
 ] }
 yew = { version = "0.21.0", features = ["csr"] }
 yew-hooks = "0.3.2"
+yewdux = "0.10.0"

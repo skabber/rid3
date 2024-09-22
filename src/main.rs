@@ -1,167 +1,37 @@
 use yew::prelude::*;
-
+use yewdux::prelude::*;
 mod components;
 use components::{FileLoader, ID3Tag, MP3Audio};
-
+use web_sys::wasm_bindgen::JsCast;
 mod state;
-use state::{AppAction, AppState};
+use state::AppState;
 
 use gloo::console::log;
-use gloo_file::File;
 use id3::Version;
 use std::io::Cursor;
-use web_sys::{Event, HtmlInputElement};
-
+#[allow(non_snake_case)]
 #[function_component]
 fn App() -> Html {
-    let state = use_reducer(|| AppState {
-        mp3: None,
-        tag: None,
-        frames: Vec::new(),
-        reader_tasks: None,
-        name: String::new(),
-        bytes: Vec::new(),
-        url: String::new(),
-    });
-
-    let seek_position = use_state(|| None);
-
-    let on_title_change = {
-        let state = state.clone();
-        Callback::from(move |e: Event| {
-            let state = state.clone();
-            let input: HtmlInputElement = e.target_unchecked_into();
-            let title = input.value();
-            let att = input.get_attribute("name").unwrap();
-            state.dispatch(AppAction::TitleChanged(att, title));
-        })
-    };
-
-    let on_file_change = {
-        let state = state.clone();
-        Callback::from(move |e: Event| {
-            let state = state.clone();
-            let mut selected_files = Vec::new();
-            let input: HtmlInputElement = e.target_unchecked_into();
-            if let Some(files) = input.files() {
-                let files = js_sys::try_iter(&files)
-                    .unwrap()
-                    .unwrap()
-                    .map(|v| web_sys::File::from(v.unwrap()))
-                    .map(File::from);
-                selected_files.extend(files);
-            }
-
-            for sf in selected_files {
-                let state = state.clone();
-                {
-                    let state = state.clone();
-                    let sd = state.clone();
-                    let file_name = sf.name();
-                    let task = gloo_file::callbacks::read_as_bytes(&sf, move |bytes| {
-                        let contents = bytes.unwrap();
-                        state.dispatch(AppAction::MP3Ready(contents));
-                        state.dispatch(AppAction::SetFileName(file_name.clone()));
-                    });
-
-                    sd.dispatch(AppAction::AddReader(task));
-                }
-            }
-        })
-    };
+    let (state, dispatch) = use_store::<AppState>();
 
     let save_clicked = {
         let state = state.clone();
         Callback::from(move |_: MouseEvent| {
-            log!("save clicked");
             let tag = state.tag.clone().unwrap();
-            log!(format!("1 {:?}", tag));
-
             let mut b = state.bytes.clone();
-            log!(format!("2 {:?}", b.len()));
-
             let curs = Cursor::new(&mut b);
-
-            // find og tag
-            // let location = id3::stream::tag::locate_id3v2(curs);
-            // log!(format!("3 {:?}", location));
 
             tag.write_to(curs, Version::Id3v23).unwrap();
 
-            // tag.write_to(&mut b, Version::Id3v23).unwrap();
-            let bytes = b.as_slice();
-            log!(format!("3 {:?}", bytes.len()));
-
-            let uint8arr =
-                js_sys::Uint8Array::new(&unsafe { js_sys::Uint8Array::view(bytes) }.into());
-            log!(format!("4 {:?}", uint8arr.length()));
-            let array = js_sys::Array::new();
-            array.push(&uint8arr.buffer());
-            log!(format!("5 {:?}", array));
-
-            let bpb = web_sys::BlobPropertyBag::new();
-            bpb.set_type("audio/mpeg3;audio/x-mpeg-3;video/mpeg;video/x-mpeg;text/xml");
-
-            let blob = web_sys::Blob::new_with_u8_array_sequence_and_options(&array, &bpb).unwrap();
-            let download_url = web_sys::Url::create_object_url_with_blob(&blob).unwrap(); // Zero bytes
-
-            log!(format!("{:?}", download_url));
-            // change_location(download_url.as_str());
-
-            let window: web_sys::Window = web_sys::window().expect("window not available");
-            let element = window.document().unwrap().create_element("a").unwrap();
-            element
-                .set_attribute("href", download_url.as_str())
-                .unwrap();
-            element.set_attribute("download", "test.mp3").unwrap();
-            window
-                .document()
-                .unwrap()
-                .body()
-                .unwrap()
-                .append_child(&element)
-                .unwrap();
-            // element.;
-            // window
-            //     .location()
-            //     .set_href(download_url.as_str())
-            //     .expect("location change failed");
+            let download_url = create_blob_url(b).unwrap();
+            force_download(&download_url, &state.name);
         })
     };
 
-    let clear_clicked = {
-        let state = state.clone();
-        Callback::from(move |_: MouseEvent| {
-            log!("clear clicked");
-            state.dispatch(AppAction::ClearClicked);
-        })
-    };
+    let clear_clicked: Callback<MouseEvent> =
+        dispatch.reduce_callback(|_| std::rc::Rc::new(AppState::default()));
 
-    let mut blob_url: Option<String> = None;
-
-    // create a blob of the mp3 file bytes
-    if state.bytes.len() > 0 {
-        let uint8arr = js_sys::Uint8Array::new(
-            &unsafe { js_sys::Uint8Array::view(&state.bytes.clone()) }.into(),
-        );
-        let array = js_sys::Array::new();
-        array.push(&uint8arr.buffer());
-
-        let bpb = web_sys::BlobPropertyBag::new();
-        bpb.set_type("audio/mpeg3;audio/x-mpeg-3;video/mpeg;video/x-mpeg;text/xml");
-        let blob = web_sys::Blob::new_with_u8_array_sequence_and_options(&array, &bpb).unwrap();
-        let download_url = web_sys::Url::create_object_url_with_blob(&blob).unwrap();
-        // Zero bytes
-        log!(format!("{:?}", download_url));
-        blob_url = Some(download_url);
-    };
-
-    let on_seek = {
-        let seek_position = seek_position.clone();
-        Callback::from(move |pos: f64| {
-            seek_position.set(Some(pos));
-        })
-    };
+    let blob_url = create_blob_url(state.bytes.clone());
 
     html! {
         <>
@@ -169,11 +39,18 @@ fn App() -> Html {
                 <div class="card">
                     <header class="card-header">
                         <p class="card-header-title">{"Upload File"}</p>
-                        // <h1 class="title">{"Upload File"}</h1>
                     </header>
                     <div class="card-content">
                         <div class="content">
-                            <FileLoader on_file_change={on_file_change} />
+                            <FileLoader />
+                            if state.bytes.len() > 0 {
+                                <div>
+                                    <strong>{"File Name: "}</strong>
+                                    <span>{state.name.clone()}</span>
+                                    <button class="button is-info" onclick={save_clicked}>{"Save"}</button>
+                                    <button class="button" onclick={clear_clicked.clone()}>{" Clear "}</button>
+                                </div>
+                            }
                         </div>
                     </div>
                 </div>
@@ -182,12 +59,10 @@ fn App() -> Html {
             if blob_url.is_some() {
                 <MP3Audio
                     url={blob_url.unwrap()}
-                    seek_position={seek_position}
                     file_name={state.name.clone()}
                 />
-                // <a href={blob_url.clone().unwrap()} download="test.mp3">{"Download"}</a>
 
-                <ID3Tag tag={state.tag.clone()} on_value_change={on_title_change} save_clicked={save_clicked} clear_clicked={clear_clicked} on_seek_position_change={on_seek}/>
+                <ID3Tag tag={state.tag.clone()} />
                 <div>{ state.url.clone() }</div>
             }
         </>
@@ -209,4 +84,126 @@ fn _alert(message: &str) {
 
 fn main() {
     yew::Renderer::<App>::new().render();
+}
+
+/// Forces the download of a file from a given blob URL.
+///
+/// This function creates a temporary invisible link element, sets its href to the provided
+/// blob URL, triggers a click event on it to start the download, and then removes the element
+/// from the DOM.
+///
+/// # Arguments
+///
+/// * `blob_url` - A string slice that holds the URL of the blob to be downloaded.
+/// * `filename` - A string slice that specifies the desired filename for the download.
+///
+/// # Panics
+///
+/// This function will panic if:
+/// - The global `window` object is not available.
+/// - The document object cannot be retrieved from the window.
+/// - Creating the temporary `<a>` element fails.
+/// - Setting attributes on the `<a>` element fails.
+/// - Appending or removing the `<a>` element from the document body fails.
+///
+/// # Examples
+///
+/// ```
+/// let blob_url = "blob:http://example.com/1234-5678-9012-3456";
+/// let filename = "example.mp3";
+/// force_download(blob_url, filename);
+/// ```
+fn force_download(blob_url: &str, filename: &str) {
+    // Get the window object
+    let window = web_sys::window().expect("no global `window` exists");
+    let document = window.document().expect("should have a document on window");
+
+    // Create a temporary <a> element
+    let a = document
+        .create_element("a")
+        .expect("failed to create a element");
+    let a: web_sys::HtmlElement = a.dyn_into::<web_sys::HtmlElement>().unwrap();
+
+    // Set the href to the blob URL
+    a.set_attribute("href", blob_url)
+        .expect("failed to set href");
+
+    // Set the download attribute with the desired filename
+    a.set_attribute("download", filename)
+        .expect("failed to set download attribute");
+
+    // Make the link invisible
+    // a.style()
+    //     .set_property("display", "none")
+    //     .expect("failed to set style");
+    a.set_attribute("style", "display: none")
+        .expect("failed to set style attribute");
+
+    // Add the link to the document body
+    document
+        .body()
+        .expect("document should have a body")
+        .append_child(&a)
+        .expect("failed to append child");
+
+    // Programmatically click the link
+    a.click();
+
+    // Remove the link from the document
+    document
+        .body()
+        .expect("document should have a body")
+        .remove_child(&a)
+        .expect("failed to remove child");
+}
+
+/// Creates a blob URL from a vector of bytes.
+///
+/// This function takes a vector of bytes representing a file (typically an MP3 file)
+/// and creates a blob URL that can be used to reference the file in the browser.
+///
+/// # Arguments
+///
+/// * `bytes` - A vector of bytes representing the file content.
+///
+/// # Returns
+///
+/// * `Option<String>` - Some(String) containing the blob URL if successful, None if the input vector is empty.
+///
+/// # Panics
+///
+/// This function may panic if:
+/// - Creating the `Uint8Array` fails.
+/// - Creating the `Blob` fails.
+/// - Creating the object URL fails.
+///
+/// # Examples
+///
+/// ```
+/// let mp3_bytes = vec![/* ... MP3 file bytes ... */];
+/// let blob_url = create_blob_url(mp3_bytes);
+/// if let Some(url) = blob_url {
+///     println!("Created blob URL: {}", url);
+/// } else {
+///     println!("Failed to create blob URL");
+/// }
+/// ```
+fn create_blob_url(bytes: Vec<u8>) -> Option<String> {
+    // create a blob of the mp3 file bytes
+    if bytes.len() > 0 {
+        let uint8arr =
+            js_sys::Uint8Array::new(&unsafe { js_sys::Uint8Array::view(&bytes.clone()) }.into());
+        let array = js_sys::Array::new();
+        array.push(&uint8arr.buffer());
+
+        let bpb = web_sys::BlobPropertyBag::new();
+        bpb.set_type("audio/mpeg3;audio/x-mpeg-3;video/mpeg;video/x-mpeg;text/xml");
+        let blob = web_sys::Blob::new_with_u8_array_sequence_and_options(&array, &bpb).unwrap();
+        let download_url = web_sys::Url::create_object_url_with_blob(&blob).unwrap();
+
+        log!(format!("{:?}", download_url));
+        Some(download_url)
+    } else {
+        None
+    }
 }
