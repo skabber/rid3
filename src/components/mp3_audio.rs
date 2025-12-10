@@ -1,20 +1,20 @@
-// use _MP3AudioProps::seek_position;
-use gloo::console::log;
-
 use web_sys::wasm_bindgen::JsCast;
 use web_sys::Element;
 use yew::prelude::*;
 use yew_hooks::{use_media_with_options, UseMediaOptions};
-//MP3AudioProps
+use yewdux::prelude::*;
+
+use crate::state::AppState;
+
 #[derive(Properties, PartialEq)]
 pub struct MP3AudioProps {
     pub url: String,
-    pub seek_position: UseStateHandle<Option<f64>>,
     pub file_name: String,
 }
 
 #[function_component(MP3Audio)]
-pub fn mp3_audio(MP3AudioProps { url, seek_position, file_name }: &MP3AudioProps) -> Html {
+pub fn mp3_audio(MP3AudioProps { url, file_name }: &MP3AudioProps) -> Html {
+    let (state, _) = use_store::<AppState>();
     let options = UseMediaOptions {
         ontimeupdate: None,
         ..Default::default()
@@ -24,13 +24,9 @@ pub fn mp3_audio(MP3AudioProps { url, seek_position, file_name }: &MP3AudioProps
 
     {
         let audio = audio.clone();
-        let seek_position = seek_position.clone();
-        use_effect_with(seek_position, move |seek_position| {
-            if let Some(position) = seek_position.as_ref() {
-                log!("Seeking to {:?}", *position);
-                audio.seek(*position);
-                audio.play();
-            }
+        use_effect_with(state.seek_position, move |seek_position| {
+            audio.seek(seek_position.clone());
+            audio.play();
         });
     }
 
