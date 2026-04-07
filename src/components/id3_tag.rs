@@ -1,7 +1,6 @@
 use gloo::console::log;
 use id3::{frame::Chapter, Tag};
 use web_sys::Event;
-use yew::classes;
 use yew::prelude::*;
 
 use base64::engine::general_purpose::STANDARD as BASE64;
@@ -11,8 +10,6 @@ use base64::engine::Engine as _;
 pub struct ID3TagProps {
     pub tag: Option<Tag>,
     pub on_value_change: Callback<Event>,
-    pub save_clicked: Callback<MouseEvent>,
-    pub clear_clicked: Callback<MouseEvent>,
     pub on_seek_position_change: Callback<f64>,
 }
 
@@ -21,25 +18,14 @@ pub fn tag(
     ID3TagProps {
         tag,
         on_value_change,
-        save_clicked,
-        clear_clicked,
         on_seek_position_change,
     }: &ID3TagProps,
 ) -> Html {
     let mut chaps = Vec::new();
     let mut frames = Vec::new();
-    let mut pic = String::new();
     if let Some(tag) = tag {
         for f in tag.frames() {
             log!(format!("{:?}", f.id()));
-            if f.id() == "APIC" {
-                if let Some(p) = f.content().picture() {
-                    log!(format!("{:?}", p.mime_type));
-                    pic = BASE64.encode(&p.data);
-                }
-            } else if f.id() != "CHAP" {
-                log!(format!("xxx {:?}", f));
-            }
         }
         frames = tag
             .frames()
@@ -50,48 +36,22 @@ pub fn tag(
     }
 
     html! {
-        <div class="container">
-            <div class="card">
-                <div class="card-header">
-                    <p class="card-header-title">{"ID3 Tag"}</p>
-                </div>
-
-                <div class="card-content">
-                    <div class="columns">
-                        <div class="column">
-                            <ChapterArt pic={pic.clone()}/>
-                        </div>
-                        <div class="column">
-                            <table class="table">
-                                <thead>
-                                    <tr>
-                                        <th>{"ID3 Tag"}</th>
-                                        <th>{"value"}</th>
-                                    </tr>
-                                </thead>
-                                <Frames frames={frames} on_value_change={on_value_change}/>
-                            </table>
-                        </div>
-                        <div class="column">
-                            <table class="table">
-                                <thead>
-                                    <tr>
-                                        <th>{"Chapters"}</th>
-                                        <th>{"Name"}</th>
-                                        <th>{"Times"}</th>
-                                        <th>{"Art"}</th>
-                                        <th>{"Controls"}</th>
-                                    </tr>
-                                </thead>
-                                <Chapters chapters={chaps} on_seek_position_change={on_seek_position_change}/>
-                            </table>
-                            <button class="button is-info" onclick={save_clicked}>{"Save"}</button>
-                            <button class="button" onclick={clear_clicked}>{" Clear "}</button>
-                            //<button class="is-info" onclick={save_clicked}>{"Save"}</button>
-                        </div>
-                    </div>
+        <div class="content-grid">
+            <div class="panel">
+                <div class="panel-header">{"ID3 Tags"}</div>
+                <div class="panel-body">
+                    <Frames frames={frames} on_value_change={on_value_change} />
                 </div>
             </div>
+
+            if !chaps.is_empty() {
+                <div class="panel">
+                    <div class="panel-header">{format!("Chapters ({})", chaps.len())}</div>
+                    <div class="panel-body">
+                        <Chapters chapters={chaps} on_seek_position_change={on_seek_position_change} />
+                    </div>
+                </div>
+            }
         </div>
     }
 }
@@ -109,69 +69,84 @@ fn tags(
         on_value_change,
     }: &FramesProps,
 ) -> Html {
-    frames.iter().map(|f| {
-        let name = String::from(f.id());
-        let value: String;
-        if name == "USLT" {
-            value = f.content().lyrics().unwrap().text.to_string();
-        } else if name == "COMM" {
-            value = f.content().comment().unwrap().text.to_string();
-        } else if name == "CTOC" {
-            value = f.content().table_of_contents().unwrap().elements.join(", ")
-        } else {
-            value = String::from(f.content().text().unwrap_or(""));
-        }
+    html! {
+        <table class="tag-table">
+            { for frames.iter().map(|f| {
+                let name = String::from(f.id());
+                let value: String = if name == "USLT" {
+                    f.content().lyrics().unwrap().text.to_string()
+                } else if name == "COMM" {
+                    f.content().comment().unwrap().text.to_string()
+                } else if name == "CTOC" {
+                    f.content().table_of_contents().unwrap().elements.join(", ")
+                } else {
+                    String::from(f.content().text().unwrap_or(""))
+                };
 
-        html! {
-            <tr>
-                <td><span>{ name.clone() }</span></td>
-                <td><input type="text" name={ name } value={ value } onchange={on_value_change}/></td>
-            </tr>
-        }
-     }).collect()
+                html! {
+                    <tr>
+                        <td class="tag-label">{ name.clone() }</td>
+                        <td><input type="text" name={ name } value={ value } onchange={on_value_change} /></td>
+                    </tr>
+                }
+            }) }
+        </table>
+    }
 }
 
-// ChapterArtProps
 #[derive(Properties, PartialEq)]
 struct ChapterArtProps {
-    pic: String, // base64 encoded image
+    pic: String,
 }
 
 #[function_component(ChapterArt)]
 fn chapter_art(ChapterArtProps { pic }: &ChapterArtProps) -> Html {
-    let modal_classes = use_state(|| vec!["modal"]);
-    let toggle_modal = {
-        let classes = modal_classes.clone();
-        if classes.contains(&"is-active") {
-            Callback::from(move |_: MouseEvent| {
-                classes.set(vec!["modal"]);
-            })
-        } else {
-            Callback::from(move |_: MouseEvent| {
-                classes.set(vec!["modal", "is-active"]);
-            })
-        }
+    let modal_open = use_state(|| false);
+
+    let open_modal = {
+        let modal_open = modal_open.clone();
+        Callback::from(move |_: MouseEvent| {
+            modal_open.set(true);
+        })
     };
+
+    let close_modal = {
+        let modal_open = modal_open.clone();
+        Callback::from(move |_: MouseEvent| {
+            modal_open.set(false);
+        })
+    };
+
     if pic.is_empty() {
         html! {
-            <></>
+            <div class="chapter-art">
+                <div class="chapter-art-placeholder">{"\u{266B}"}</div>
+            </div>
         }
     } else {
+        let src = format!("data:image/png;base64,{}", pic);
         html! {
             <>
-                <img src={format!("data:image/png;base64,{}", pic.clone())} width="200" onclick={toggle_modal.clone()} />
-                <div class={classes!((*modal_classes).clone())}>
-                <div class="modal-background" onclick={toggle_modal.clone()}></div>
-                  <div class="modal-content">
-                    <p class="image">
-                      <img src={format!("data:image/png;base64,{}", pic.clone())} />
-                    </p>
-                  </div>
-                  <button class="modal-close is-large" aria-label="close" onclick={toggle_modal}></button>
+                <div class="chapter-art" onclick={open_modal}>
+                    <img src={src.clone()} alt="Chapter art" />
                 </div>
+                if *modal_open {
+                    <div class="modal-overlay" onclick={close_modal.clone()}>
+                        <div class="modal-content">
+                            <img src={src} alt="Chapter art full size" />
+                        </div>
+                        <button class="modal-close" onclick={close_modal}>{"\u{00D7}"}</button>
+                    </div>
+                }
             </>
         }
     }
+}
+
+// Format milliseconds as M:SS
+fn format_time(ms: u32) -> String {
+    let secs = ms / 1000;
+    format!("{}:{:02}", secs / 60, secs % 60)
 }
 
 #[derive(Properties, PartialEq)]
@@ -187,53 +162,56 @@ fn chapters(
         on_seek_position_change,
     }: &ChaptersProps,
 ) -> Html {
-    let mut c = Vec::new();
-    for chapter in chapters {
-        let id = chapter.element_id.clone();
-        let start_time = chapter.start_time;
-        let end_time = chapter.end_time;
-        let mut name = "";
-        let mut link: Option<String> = None;
-        let mut pic: Option<String> = None;
-        chapter.frames.iter().for_each(|f| match f.id() {
-            "TIT2" => {
-                name = f.content().text().unwrap();
-            }
-            "APIC" => {
-                if let Some(p) = f.content().picture() {
-                    log!(format!("APIC.len == {:?}", p.data.len()));
-                    pic = Some(BASE64.encode(&p.data));
-                }
-            }
-            "WXXX" => {
-                link = Some(f.content().extended_link().unwrap().link.to_string());
-            }
-            _ => {}
-        });
-
-        c.push(html! {
-            <tr>
-                <td>{ id }</td>
-                <td>
-                    if let Some(link) = link.clone() {
-                        <a href={link}>{name}</a>
-                    } else {
-                        { name }
-                    }
-                </td>
-                <td>{ start_time/1000 } {"-"} { end_time/1000 }</td>
-                <td>
-                    if pic.is_some() {
-                        <ChapterArt pic={pic.clone().unwrap()}/>
-                    }
-                </td>
-                <td>
-                    <button class="button is-info" onclick={on_seek_position_change.reform(move |_| (start_time/1000) as f64)}>{">"}</button>
-                </td>
-            </tr>
-        });
-    }
     html! {
-        { for c }
+        <ul class="chapters-list">
+            { for chapters.iter().map(|chapter| {
+                let start_time = chapter.start_time;
+                let end_time = chapter.end_time;
+                let mut name = String::new();
+                let mut link: Option<String> = None;
+                let mut pic = String::new();
+
+                for f in &chapter.frames {
+                    match f.id() {
+                        "TIT2" => {
+                            name = f.content().text().unwrap_or("").to_string();
+                        }
+                        "APIC" => {
+                            if let Some(p) = f.content().picture() {
+                                log!(format!("APIC.len == {:?}", p.data.len()));
+                                pic = BASE64.encode(&p.data);
+                            }
+                        }
+                        "WXXX" => {
+                            link = Some(f.content().extended_link().unwrap().link.to_string());
+                        }
+                        _ => {}
+                    }
+                }
+
+                let on_play = on_seek_position_change.reform(move |_| (start_time / 1000) as f64);
+
+                html! {
+                    <li class="chapter-item">
+                        <ChapterArt pic={pic} />
+                        <div class="chapter-info">
+                            <div class="chapter-name">
+                                if let Some(ref link) = link {
+                                    <a href={link.clone()} target="_blank">{ &name }</a>
+                                } else {
+                                    { &name }
+                                }
+                            </div>
+                            <div class="chapter-time">
+                                { format_time(start_time) }{ " \u{2013} " }{ format_time(end_time) }
+                            </div>
+                        </div>
+                        <button class="chapter-play-btn" onclick={on_play} title="Play from here">
+                            {"\u{25B6}"}
+                        </button>
+                    </li>
+                }
+            }) }
+        </ul>
     }
 }

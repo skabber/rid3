@@ -1,11 +1,9 @@
-// use _MP3AudioProps::seek_position;
 use gloo::console::log;
-
 use web_sys::wasm_bindgen::JsCast;
 use web_sys::Element;
 use yew::prelude::*;
 use yew_hooks::{use_media_with_options, UseMediaOptions};
-//MP3AudioProps
+
 #[derive(Properties, PartialEq)]
 pub struct MP3AudioProps {
     pub url: String,
@@ -13,8 +11,19 @@ pub struct MP3AudioProps {
     pub file_name: String,
 }
 
+fn format_time(seconds: f64) -> String {
+    let s = seconds as i32;
+    format!("{}:{:02}", s / 60, s % 60)
+}
+
 #[function_component(MP3Audio)]
-pub fn mp3_audio(MP3AudioProps { url, seek_position, file_name }: &MP3AudioProps) -> Html {
+pub fn mp3_audio(
+    MP3AudioProps {
+        url,
+        seek_position,
+        file_name: _,
+    }: &MP3AudioProps,
+) -> Html {
     let options = UseMediaOptions {
         ontimeupdate: None,
         ..Default::default()
@@ -34,16 +43,14 @@ pub fn mp3_audio(MP3AudioProps { url, seek_position, file_name }: &MP3AudioProps
         });
     }
 
-    let onplay = {
+    let toggle_play = {
         let audio = audio.clone();
         Callback::from(move |_| {
-            audio.play();
-        })
-    };
-    let onpause = {
-        let audio = audio.clone();
-        Callback::from(move |_| {
-            audio.pause();
+            if *audio.playing {
+                audio.pause();
+            } else {
+                audio.play();
+            }
         })
     };
 
@@ -62,28 +69,27 @@ pub fn mp3_audio(MP3AudioProps { url, seek_position, file_name }: &MP3AudioProps
         })
     };
 
+    let progress_pct = if *audio.duration > 0.0 {
+        (*audio.time / *audio.duration) * 100.0
+    } else {
+        0.0
+    };
+
     html! {
-        <>
-            <div class="container">
-                <div class="card">
-                    <div class="card-content">
-                        <header class="card-header">
-                            <p class="card-header-title">{ file_name }</p>
-                        </header>
-                        <audio ref={node_audio} src={url.clone()} controls=true />
-                        <progress
-                            class="progress is-primary"
-                            value={audio.time.to_string()}
-                            max={audio.duration.to_string()}
-                            onclick={onseek}
-                            style="cursor: pointer;"
-                        ></progress>
-                        <button class="button" onclick={onplay} disabled={*audio.playing}>{ "Play" }</button>
-                        <button class="button" onclick={onpause} disabled={!*audio.playing}>{ "Pause" }</button>
-                        <div>{format!("{:02}:{:02}", (*audio.time / 60.0) as i32, (*audio.time % 60.0) as i32)}</div>
+        <div class="audio-player">
+            <audio ref={node_audio} src={url.clone()} />
+            <div class="player-controls">
+                <button class="player-btn" onclick={toggle_play}>
+                    if *audio.playing { {"\u{23F8}"} } else { {"\u{25B6}"} }
+                </button>
+                <div class="player-progress-wrap">
+                    <span class="player-time">{ format_time(*audio.time) }</span>
+                    <div class="progress-bar" onclick={onseek}>
+                        <div class="progress-fill" style={format!("width: {}%", progress_pct)}></div>
                     </div>
+                    <span class="player-time right">{ format_time(*audio.duration) }</span>
                 </div>
             </div>
-        </>
+        </div>
     }
 }

@@ -9,18 +9,11 @@ pub struct FileLoaderProps {
 #[function_component(FileLoader)]
 pub fn file_loader(FileLoaderProps { on_file_change }: &FileLoaderProps) -> Html {
     html!(
-        <div class="file">
-            <label class="file-label">
-              <input class="file-input" type="file" name="resume" accept="audio/mp3,audio/*" onchange={on_file_change} multiple=false/>
-              <span class="file-cta">
-                <span class="file-icon">
-                  <i class="fas fa-upload"></i>
-                </span>
-                <span class="file-label">
-                  {"Choose a file…"}
-                </span>
-              </span>
-            </label>
-          </div>
+        <div class="dropzone">
+            <input type="file" accept="audio/mp3,audio/*" onchange={on_file_change} multiple=false />
+            <span class="dropzone-icon">{"\u{266B}"}</span>
+            <div class="dropzone-text">{"Drop an MP3 file here or click to browse"}</div>
+            <div class="dropzone-hint">{"Supports MP3 files with ID3v2 tags"}</div>
+        </div>
     )
 }
